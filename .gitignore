@@ -4,12 +4,17 @@ __pycache__/
 *$py.class
 
 # Môi trường ảo (Tuyệt đối không push vì thư mục này cực kỳ nặng)
-../.venv/
+.venv/
 venv/
 ENV/
 
-# File cấu hình riêng tư của PyCharm
+# File biến môi trường (chứa password, API key, thông tin database)
+.env
+.env.*
+
+# File cấu hình riêng tư của PyCharm và VS Code
 .idea/
+.vscode/
 
 # File nhật ký và hệ thống rác
 *.log
