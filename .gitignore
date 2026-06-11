@@ -10,7 +10,7 @@ ENV/
 
 # File biến môi trường (chứa password, API key, thông tin database)
 .env
-.env.*
+.env
 
 # File cấu hình riêng tư của PyCharm và VS Code
 .idea/
