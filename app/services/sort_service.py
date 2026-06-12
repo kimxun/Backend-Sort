@@ -22,6 +22,10 @@ class SortService:
         return AlgorithmRepository.get_all()
 
     @staticmethod
+    def get_algorithm_by_id(algorithm_id):
+        return AlgorithmRepository.get_by_id(algorithm_id)
+
+    @staticmethod
     def get_algorithm_by_slug(slug):
         return AlgorithmRepository.get_by_slug(slug)
 

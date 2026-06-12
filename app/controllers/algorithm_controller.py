@@ -19,3 +19,17 @@ def get_all_algorithms():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@algorithm_bp.route('/<int:algorithm_id>', methods=['GET'])
+def get_algorithm(algorithm_id):
+    try:
+        algorithm = SortService.get_algorithm_by_id(algorithm_id)
+
+        if not algorithm:
+            return jsonify({"error": "Algorithm not found"}), 404
+
+        return jsonify(algorithm.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
