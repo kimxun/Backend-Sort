@@ -16,3 +16,5 @@ python -m pip install -r requirements.txt
 Các bước kết nối csdl
 B1: Chuyển file env.example thành .env
 B2: Thêm các giá trị vào rồi lưu
+B3: Mở xampp tạo database đúng với tên trong .env
+B4: import file vào
