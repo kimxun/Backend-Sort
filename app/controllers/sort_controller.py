@@ -2,7 +2,6 @@ from flask import request, jsonify, Blueprint
 import time
 import json
 from app.services.sort_service import sort_array_with_metrics, SortService
-from utils.validators import validate_sort_request
 
 sort_bp = Blueprint('sort', __name__)
 
@@ -43,9 +42,14 @@ def _build_response(original_array, sorted_array, algorithm_name, steps, compari
 @sort_bp.route('', methods=['POST'])
 def handle_sort():
     data = request.get_json()
-    valid, error = validate_sort_request(data)
-    if not valid:
-        return jsonify({"error": error}), 400
+    if not data:
+        return jsonify({"error": "Missing JSON body"}), 400
+    if 'array' not in data or 'algorithm' not in data:
+        return jsonify({"error": "Missing 'array' or 'algorithm' field"}), 400
+    if not isinstance(data['array'], list):
+        return jsonify({"error": "'array' must be a list"}), 400
+    if 'user_id' not in data:
+        return jsonify({"error": "Missing user_id"}), 400
 
     original_array = data['array']
     algorithm_name = data['algorithm']

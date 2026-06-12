@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from repositories.simulation_history_repository import SimulationHistoryRepository
+from app.repositories.simulation_history_repository import SimulationHistoryRepository
 
 sim_bp = Blueprint('simulation', __name__, url_prefix='/simulations')
 

@@ -1,13 +1,23 @@
-class User:
-    def __init__(self, id=None, username=None, password=None, full_name=None,
-                 email=None, role=None, created_at=None):
-        self.id = id
-        self.username = username
-        self.password = password
-        self.full_name = full_name
-        self.email = email
-        self.role = role
-        self.created_at = created_at  
+from app.database.db import db
+
+class User(db.Model):
+    __tablename__ = 'TaiKhoan'
+
+    id = db.Column('idTaiKhoan', db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column('tenTaiKhoan', db.String(50), unique=True, nullable=False)
+    password = db.Column('matKhau', db.String(255), nullable=False)
+    full_name = db.Column('hoTen', db.String(50), nullable=False)
+    email = db.Column('email', db.String(50), unique=True, nullable=False)
+    role = db.Column('vaiTro', db.Integer, default=0)
+    created_at = db.Column('ngayTao', db.DateTime, default=db.func.current_timestamp())
 
     def to_dict(self):
-        return {k: v for k, v in self.__dict__.items() if v is not None}
+        return {
+            "id": self.id,
+            "username": self.username,
+            "password": self.password,
+            "full_name": self.full_name,
+            "email": self.email,
+            "role": self.role,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

@@ -1,0 +1,11 @@
+[33m17b741a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mthien[m[33m, [m[1;31morigin/thien[m[33m)[m Merge branch main vao thien va clear conflict
+[33m18af5d1[m cap nhat file code
+[33m7cce714[m Remove pycache files from repository
+[33m9240140[m Update README
+[33m7b5bc46[m Update lai ket noi csdl
+[33m484d522[m Merge pull request #4 from kimxun/thien
+[33m1c6e530[m da them cac models,repositories,tao du lieu database bang seed
+[33m6932757[m Tao service ket noi csdl
+[33m802d38c[m khoi tao cau truc BE
+[33m1785648[m Khoi tao cau truc thu muc BE
+[33m31c8e8b[m Initial commit
