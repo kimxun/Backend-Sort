@@ -11,4 +11,4 @@ venv\Scripts\Activate.ps1
 source venv/bin/activate
 
 # Cài đặt dependencies
-python -m pip install -r requirements.txt
+python -m pip install -rr equirements.txt
