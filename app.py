@@ -23,5 +23,15 @@ def home():
     return jsonify({"message": "Backend Sort API is running"})
 
 if __name__ == '__main__':
+<<<<<<< Updated upstream
 
+=======
+    with app.app_context():
+        try:
+            db.engine.connect()
+            print("✅ Kết nối MySQL thành công!")
+        except Exception as e:
+            print("❌ Kết nối MySQL thất bại!")
+            print(e)
+>>>>>>> Stashed changes
     app.run(debug=True)

@@ -11,7 +11,7 @@ venv\Scripts\Activate.ps1
 source venv/bin/activate
 
 # Cài đặt dependencies
-python -m pip install -rr equirements.txt
+python -m pip install -r requirements.txt
 
 Các bước kết nối csdl
 B1: Chuyển file env.example thành .env hoặc tạo file .env mới
