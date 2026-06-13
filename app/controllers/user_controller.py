@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from repositories.user_repository import UserRepository
+from app.repositories.user_repository import UserRepository
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
