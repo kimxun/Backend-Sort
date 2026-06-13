@@ -10,6 +10,7 @@ from app.repositories.algorithm_category_repository import AlgorithmCategoryRepo
 from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
+from werkzeug.security import generate_password_hash
 
 def seed():
     app = Flask(__name__)
@@ -61,7 +62,7 @@ def seed():
 
         admin = UserRepository.create({
             'username': 'admin',
-            'password': 'admin123',
+            'password': generate_password_hash('admin123'),
             'full_name': 'Administrator',
             'email': 'admin@example.com',
             'role': 1
@@ -70,7 +71,7 @@ def seed():
 
         user = UserRepository.create({
             'username': 'user1',
-            'password': 'user123',
+            'password': generate_password_hash('user123'),
             'full_name': 'Nguyen Van A',
             'email': 'user1@example.com',
             'role': 0

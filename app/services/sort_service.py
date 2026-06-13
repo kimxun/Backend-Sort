@@ -8,11 +8,14 @@ def sort_array_with_metrics(arr, algorithm):
     if not isinstance(arr, list):
         raise ValueError("Input must be a list")
     if algorithm == 'interchange_sort':
-        return interchange_sort(arr)
+        sorted_arr, steps, comparisons, swaps, _ = interchange_sort(arr)
+        return sorted_arr, steps, comparisons, swaps
     elif algorithm == 'quick_sort':
-        return quick_sort(arr)
+        sorted_arr, steps, comparisons, swaps, _ = quick_sort(arr)
+        return sorted_arr, steps, comparisons, swaps
     elif algorithm == 'selection_sort':
-        return selection_sort(arr)
+        sorted_arr, steps, comparisons, swaps, _ = selection_sort(arr)
+        return sorted_arr, steps, comparisons, swaps
     else:
         raise ValueError(f"Unsupported algorithm: {algorithm}. Only support: interchange_sort, quick_sort, selection_sort")
 

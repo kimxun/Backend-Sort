@@ -4,6 +4,7 @@ def selection_sort_logic(arr):
     swaps = 0
     sorted_arr = arr.copy()
     n = len(sorted_arr)
+    steps_history = [sorted_arr.copy()]
     for i in range(n):
         min_idx = i
         for j in range(i+1, n):
@@ -14,5 +15,6 @@ def selection_sort_logic(arr):
         if min_idx != i:
             sorted_arr[i], sorted_arr[min_idx] = sorted_arr[min_idx], sorted_arr[i]
             swaps += 1
+            steps_history.append(sorted_arr.copy())
         steps += 1
-    return sorted_arr, steps, comparisons, swaps
+    return sorted_arr, steps, comparisons, swaps, steps_history
