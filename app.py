@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flasgger import Swagger
 from app.controllers.sort_controller import sort_bp
 from app.controllers.user_controller import user_bp
 from app.controllers.simulation_controller import sim_bp
@@ -9,6 +10,14 @@ from app.controllers.algorithm_controller import algorithm_bp
 from app.controllers.auth_controller import auth_bp
 app = Flask(__name__)
 app.config.from_object(Config)
+
+app.config['SWAGGER'] = {
+    'title': 'Backend Sort API',
+    'version': 1.0,
+    'openapi': '3.0.2',
+    'description': 'API quản lý thuật toán sắp xếp, người dùng, xác thực JWT'
+}
+swagger = Swagger(app)
 
 db.init_app(app)
 CORS(app)
