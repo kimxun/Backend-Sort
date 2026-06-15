@@ -1,0 +1,47 @@
+Đăng nhập, trả về token JWT
+---
+parameters:
+  - name: body
+    in: body
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              example: admin
+            password:
+              type: string
+              example: admin123
+responses:
+  200:
+    description: Đăng nhập thành công
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            data:
+              type: object
+              properties:
+                token:
+                  type: string
+                user:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    username:
+                      type: string
+                    full_name:
+                      type: string
+                    email:
+                      type: string
+                    role:
+                      type: integer
+  401:
+    description: Sai tài khoản hoặc mật khẩu

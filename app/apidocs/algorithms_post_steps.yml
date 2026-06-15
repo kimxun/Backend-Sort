@@ -1,0 +1,60 @@
+Lấy danh sách các bước thực hiện của thuật toán
+---
+parameters:
+  - name: algorithm_id
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID của thuật toán
+  - name: body
+    in: body
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            array:
+              type: array
+              items:
+                type: integer
+              example: [3, 1, 4, 2]
+responses:
+  200:
+    description: Thành công
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            algorithm_id:
+              type: integer
+            algorithm_name:
+              type: string
+            input_array:
+              type: array
+              items:
+                type: integer
+            sorted_array:
+              type: array
+              items:
+                type: integer
+            steps:
+              type: integer
+            comparisons:
+              type: integer
+            swaps:
+              type: integer
+            step_by_step:
+              type: array
+              items:
+                type: array
+                items:
+                  type: integer
+  400:
+    description: Thiếu tham số hoặc mảng không hợp lệ
+  404:
+    description: Không tìm thấy thuật toán hoặc không hỗ trợ step-by-step
+  500:
+    description: Lỗi server

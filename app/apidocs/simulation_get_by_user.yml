@@ -1,0 +1,45 @@
+Lấy lịch sử mô phỏng của một người dùng
+---
+security:
+  - BearerAuth: []
+parameters:
+  - name: user_id
+    in: path
+    required: true
+    schema:
+      type: integer
+responses:
+  200:
+    description: Danh sách lịch sử
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              user_id:
+                type: integer
+              algorithm_id:
+                type: integer
+              input_data:
+                type: string
+              sorted_result:
+                type: string
+              steps:
+                type: integer
+              comparisons:
+                type: integer
+              swaps:
+                type: integer
+              execution_time_ms:
+                type: integer
+              executed_at:
+                type: string
+                format: date-time
+  404:
+    description: Không tìm thấy user
+  401:
+    description: Unauthorized

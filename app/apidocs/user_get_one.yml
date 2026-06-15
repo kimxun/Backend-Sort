@@ -1,0 +1,35 @@
+Lấy thông tin người dùng theo ID (yêu cầu đăng nhập)
+---
+security:
+  - BearerAuth: []
+parameters:
+  - name: user_id
+    in: path
+    required: true
+    schema:
+      type: integer
+responses:
+  200:
+    description: Thành công
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            full_name:
+              type: string
+            email:
+              type: string
+            role:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+  404:
+    description: Không tìm thấy
+  401:
+    description: Unauthorized
