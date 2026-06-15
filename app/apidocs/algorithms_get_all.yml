@@ -1,0 +1,26 @@
+Lấy danh sách tất cả các thuật toán
+---
+responses:
+  200:
+    description: Thành công
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              slug:
+                type: string
+              description:
+                type: string
+              time_complexity:
+                type: string
+              space_complexity:
+                type: string
+  500:
+    description: Lỗi server

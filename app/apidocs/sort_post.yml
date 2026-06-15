@@ -1,0 +1,57 @@
+Sắp xếp mảng bằng thuật toán (yêu cầu đăng nhập)
+---
+security:
+  - BearerAuth: []
+parameters:
+  - name: body
+    in: body
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            array:
+              type: array
+              items:
+                type: integer
+              example: [3, 1, 4, 2]
+            algorithm:
+              type: string
+              enum: ["quick_sort", "selection_sort", "interchange_sort"]
+              example: quick_sort
+responses:
+  200:
+    description: Kết quả sắp xếp
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            original:
+              type: array
+              items:
+                type: integer
+            sorted:
+              type: array
+              items:
+                type: integer
+            algorithm:
+              type: string
+            metrics:
+              type: object
+              properties:
+                steps:
+                  type: integer
+                comparisons:
+                  type: integer
+                swaps:
+                  type: integer
+                execution_time_ms:
+                  type: integer
+            simulation_id:
+              type: integer
+  400:
+    description: Thiếu tham số hoặc lỗi
+  401:
+    description: Unauthorized

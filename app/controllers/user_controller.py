@@ -1,17 +1,21 @@
 from flask import request, jsonify, Blueprint
+from flasgger import swag_from
 from app.repositories.user_repository import UserRepository
 from app.utils.auth_decorator import jwt_required, roles_required
+
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 @user_bp.route('', methods=['GET'])
 @jwt_required
 @roles_required('admin')
+@swag_from('../apidocs/user_get_all.yml')
 def get_all_users():
     users = UserRepository.get_all()
     return jsonify([u.to_dict() for u in users]), 200
 
 @user_bp.route('/<int:user_id>', methods=['GET'])
 @jwt_required
+@swag_from('../apidocs/user_get_one.yml')
 def get_user(user_id):
     user = UserRepository.get_by_id(user_id)
     if not user:
@@ -21,6 +25,7 @@ def get_user(user_id):
 @user_bp.route('', methods=['POST'])
 @jwt_required
 @roles_required('admin')
+@swag_from('../apidocs/user_create.yml')
 def create_user():
     data = request.get_json()
     required = ['username', 'password', 'full_name', 'email', 'role']
@@ -35,6 +40,7 @@ def create_user():
 @user_bp.route('/<int:user_id>', methods=['PUT'])
 @jwt_required
 @roles_required('admin')
+@swag_from('../apidocs/user_update.yml')
 def update_user(user_id):
     data = request.get_json()
     user = UserRepository.update(user_id, data)
@@ -45,6 +51,7 @@ def update_user(user_id):
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required
 @roles_required('admin')
+@swag_from('../apidocs/user_delete.yml')
 def delete_user(user_id):
     success = UserRepository.delete(user_id)
     if not success:

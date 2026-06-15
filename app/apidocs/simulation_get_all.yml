@@ -1,0 +1,37 @@
+Lấy tất cả lịch sử mô phỏng (chỉ admin)
+---
+security:
+  - BearerAuth: []
+responses:
+  200:
+    description: Danh sách lịch sử
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              user_id:
+                type: integer
+              algorithm_id:
+                type: integer
+              input_data:
+                type: string
+              sorted_result:
+                type: string
+              steps:
+                type: integer
+              comparisons:
+                type: integer
+              swaps:
+                type: integer
+              execution_time_ms:
+                type: integer
+              executed_at:
+                type: string
+                format: date-time
+  401:
+    description: Unauthorized

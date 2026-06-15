@@ -1,0 +1,33 @@
+Lấy thông tin chi tiết một thuật toán theo ID
+---
+parameters:
+  - name: algorithm_id
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID của thuật toán
+responses:
+  200:
+    description: Thành công
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            slug:
+              type: string
+            description:
+              type: string
+            time_complexity:
+              type: string
+            space_complexity:
+              type: string
+  404:
+    description: Không tìm thấy thuật toán
+  500:
+    description: Lỗi server

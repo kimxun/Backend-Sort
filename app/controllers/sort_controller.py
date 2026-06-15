@@ -1,8 +1,10 @@
 from flask import request, jsonify, Blueprint, g
 import time
 import json
+from flasgger import swag_from
 from app.services.sort_service import sort_array_with_metrics, SortService
 from app.utils.auth_decorator import jwt_required
+
 sort_bp = Blueprint('sort', __name__)
 
 ALGO_SLUG_MAP = {
@@ -41,6 +43,7 @@ def _build_response(original_array, sorted_array, algorithm_name, steps, compari
 
 @sort_bp.route('', methods=['POST'])
 @jwt_required
+@swag_from('../apidocs/sort_post.yml')
 def handle_sort():
     data = request.get_json()
     if not data:
