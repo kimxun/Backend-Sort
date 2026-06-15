@@ -1,8 +1,8 @@
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, g
 import time
 import json
 from app.services.sort_service import sort_array_with_metrics, SortService
-
+from app.utils.auth_decorator import jwt_required
 sort_bp = Blueprint('sort', __name__)
 
 ALGO_SLUG_MAP = {
@@ -40,6 +40,7 @@ def _build_response(original_array, sorted_array, algorithm_name, steps, compari
     return jsonify(response), 200
 
 @sort_bp.route('', methods=['POST'])
+@jwt_required
 def handle_sort():
     data = request.get_json()
     if not data:
@@ -48,12 +49,10 @@ def handle_sort():
         return jsonify({"error": "Missing 'array' or 'algorithm' field"}), 400
     if not isinstance(data['array'], list):
         return jsonify({"error": "'array' must be a list"}), 400
-    if 'user_id' not in data:
-        return jsonify({"error": "Missing user_id"}), 400
 
     original_array = data['array']
     algorithm_name = data['algorithm']
-    user_id = data['user_id']
+    user_id = g.current_user['id']
 
     if algorithm_name not in ALGO_SLUG_MAP:
         return jsonify({"error": f"Unsupported algorithm. Supported: {list(ALGO_SLUG_MAP.keys())}"}), 400
