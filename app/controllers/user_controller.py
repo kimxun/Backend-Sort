@@ -1,14 +1,17 @@
 from flask import request, jsonify, Blueprint
 from app.repositories.user_repository import UserRepository
-
+from app.utils.auth_decorator import jwt_required, roles_required
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 @user_bp.route('', methods=['GET'])
+@jwt_required
+@roles_required('admin')
 def get_all_users():
     users = UserRepository.get_all()
     return jsonify([u.to_dict() for u in users]), 200
 
 @user_bp.route('/<int:user_id>', methods=['GET'])
+@jwt_required
 def get_user(user_id):
     user = UserRepository.get_by_id(user_id)
     if not user:
@@ -16,6 +19,8 @@ def get_user(user_id):
     return jsonify(user.to_dict()), 200
 
 @user_bp.route('', methods=['POST'])
+@jwt_required
+@roles_required('admin')
 def create_user():
     data = request.get_json()
     required = ['username', 'password', 'full_name', 'email', 'role']
@@ -28,6 +33,8 @@ def create_user():
         return jsonify({"error": str(e)}), 400
 
 @user_bp.route('/<int:user_id>', methods=['PUT'])
+@jwt_required
+@roles_required('admin')
 def update_user(user_id):
     data = request.get_json()
     user = UserRepository.update(user_id, data)
@@ -36,6 +43,8 @@ def update_user(user_id):
     return jsonify(user.to_dict()), 200
 
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
+@jwt_required
+@roles_required('admin')
 def delete_user(user_id):
     success = UserRepository.delete(user_id)
     if not success:
