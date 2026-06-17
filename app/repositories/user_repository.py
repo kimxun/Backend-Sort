@@ -36,6 +36,7 @@ class UserRepository:
             user.full_name = data.get('full_name', user.full_name)
             user.email = data.get('email', user.email)
             user.role = data.get('role', user.role)
+            user.status = data.get('status', user.status)
             db.session.commit()
         return user
 

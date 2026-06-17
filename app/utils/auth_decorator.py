@@ -30,7 +30,7 @@ def jwt_required(f):
             )
 
             g.current_user = payload
-
+            # kiểm tra token còn hạn không
         except jwt.ExpiredSignatureError:
             return jsonify({
                 "message": "Token đã hết hạn"

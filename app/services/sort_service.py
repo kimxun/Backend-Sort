@@ -50,3 +50,33 @@ class SortService:
     @staticmethod
     def get_user_history(user_id):
         return SimulationHistoryRepository.get_by_user(user_id)
+    
+    @staticmethod
+    def get_all_algorithms(page, limit):
+        if page < 1:
+            page = 1
+        if limit < 1:
+            limit = 10
+
+        offset = (page - 1) * limit
+
+        query = AlgorithmRepository.get_query()
+
+        total = query.count()
+
+        algorithms = (
+            query
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        return {
+            "data": [a.to_dict() for a in algorithms],
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "totalPages": (total + limit - 1) // limit
+            }
+        }
