@@ -1,27 +1,31 @@
-Xóa người dùng (chỉ admin)
----
+tags:
+  - Users
+summary: Xóa người dùng (chỉ admin)
+description: Xóa một người dùng khỏi hệ thống (yêu cầu token và quyền admin).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: user_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của người dùng cần xóa
+    example: 1
+
 responses:
   200:
     description: Xóa thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            message:
-              type: string
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "User deleted"
+  404:
+    description: Không tìm thấy người dùng
   401:
     description: Unauthorized
   403:
     description: Forbidden
-  404:
-    description: Không tìm thấy người dùng

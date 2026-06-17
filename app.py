@@ -8,14 +8,23 @@ from app.config.config import Config
 from app.database.db import db
 from app.controllers.algorithm_controller import algorithm_bp
 from app.controllers.auth_controller import auth_bp
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
 app.config['SWAGGER'] = {
+    'swagger': '2.0',
     'title': 'Backend Sort API',
-    'version': 1.0,
-    'openapi': '3.0.2',
-    'description': 'API quản lý thuật toán sắp xếp, người dùng, xác thực JWT'
+    'version': '1.0',
+    'description': 'API quản lý thuật toán sắp xếp, người dùng, xác thực JWT',
+    'securityDefinitions': {
+        'BearerAuth': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+    'security': [{'BearerAuth': []}]         # <-- thêm dòng này
 }
 swagger = Swagger(app)
 
@@ -27,6 +36,7 @@ app.register_blueprint(user_bp, url_prefix='/api/users')
 app.register_blueprint(sim_bp, url_prefix='/api/simulations')
 app.register_blueprint(algorithm_bp, url_prefix='/api/algorithms')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
 @app.route('/')
 def home():
     return jsonify({"message": "Backend Sort API is running"})

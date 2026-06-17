@@ -1,32 +1,40 @@
-Lấy thông tin chi tiết một thuật toán theo ID
----
+tags:
+  - Algorithms
+summary: Lấy thông tin chi tiết một thuật toán theo ID
+description: Trả về thông tin chi tiết của một thuật toán dựa trên ID.
+
 parameters:
   - name: algorithm_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của thuật toán
+    example: 1
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            slug:
-              type: string
-            description:
-              type: string
-            time_complexity:
-              type: string
-            space_complexity:
-              type: string
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Selection Sort"
+        slug:
+          type: string
+          example: "selection-sort"
+        description:
+          type: string
+          example: "Thuật toán sắp xếp chọn"
+        time_complexity:
+          type: string
+          example: "O(n^2)"
+        space_complexity:
+          type: string
+          example: "O(1)"
   404:
     description: Không tìm thấy thuật toán
   500:

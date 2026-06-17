@@ -10,6 +10,7 @@ class User(db.Model):
     email = db.Column('email', db.String(50), unique=True, nullable=False)
     role = db.Column('vaiTro', db.Integer, default=0)
     created_at = db.Column('ngayTao', db.DateTime, default=db.func.current_timestamp())
+    status = db.Column('trangThai', db.Integer, default=0)
 
     def to_dict(self):
         return {
@@ -19,5 +20,6 @@ class User(db.Model):
             "full_name": self.full_name,
             "email": self.email,
             "role": self.role,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "status": self.status
         }

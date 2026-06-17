@@ -19,17 +19,19 @@ def seed():
     CORS(app)
 
     with app.app_context():
-        # Nếu muốn reset database (xoá sạch và tạo lại bảng), bỏ comment 2 dòng dưới
+        # Reset database (xóa và tạo lại)
         db.drop_all()
         db.create_all()
         print("🌱 Seeding data...")
 
+        # Tạo loại thuật toán
         cat_sort = AlgorithmCategoryRepository.create("Sorting")
         print("Created category: Sorting")
 
+        # Tạo thuật toán Selection Sort (code C++)
         selection = AlgorithmRepository.create({
             'name': 'Selection Sort',
-            'code': 'def selection_sort(arr): ...',
+            'code': 'void selection_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tint min_idx = i;\n\t\tfor (int j = i+1; j < n; j++)\n\t\t\tif (arr[j] < arr[min_idx])\n\t\t\t\tmin_idx = j;\n\t\tswap(arr[i], arr[min_idx]);\n\t}\n}',
             'description': 'Selection sort algorithm',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
@@ -38,9 +40,10 @@ def seed():
         })
         print("Created algorithm: Selection Sort")
 
+        # Tạo thuật toán Quick Sort (code C++)
         quick = AlgorithmRepository.create({
             'name': 'Quick Sort',
-            'code': 'def quick_sort(arr): ...',
+            'code': 'int partition(int arr[], int low, int high) {\n\tint pivot = arr[high];\n\tint i = low - 1;\n\tfor (int j = low; j < high; j++) {\n\t\tif (arr[j] <= pivot) {\n\t\t\ti++;\n\t\t\tswap(arr[i], arr[j]);\n\t\t}\n\t}\n\tswap(arr[i+1], arr[high]);\n\treturn i+1;\n}\n\nvoid quick_sort(int arr[], int low, int high) {\n\tif (low < high) {\n\t\tint pi = partition(arr, low, high);\n\t\tquick_sort(arr, low, pi-1);\n\t\tquick_sort(arr, pi+1, high);\n\t}\n}',
             'description': 'Quick sort algorithm',
             'time_complexity': 'O(n log n)',
             'space_complexity': 'O(log n)',
@@ -49,9 +52,10 @@ def seed():
         })
         print("Created algorithm: Quick Sort")
 
+        # Tạo thuật toán Interchange Sort (code C++)
         interchange = AlgorithmRepository.create({
             'name': 'Interchange Sort',
-            'code': 'def interchange_sort(arr): ...',
+            'code': 'void interchange_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tfor (int j = i+1; j < n; j++) {\n\t\t\tif (arr[i] > arr[j]) {\n\t\t\t\tswap(arr[i], arr[j]);\n\t\t\t}\n\t\t}\n\t}\n}',
             'description': 'Interchange sort algorithm',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
@@ -60,24 +64,29 @@ def seed():
         })
         print("Created algorithm: Interchange Sort")
 
+        # Tạo admin user (có status = 1)
         admin = UserRepository.create({
             'username': 'admin',
             'password': generate_password_hash('admin123'),
             'full_name': 'Administrator',
             'email': 'admin@example.com',
-            'role': 1
+            'role': 1,
+            'status': 1   # thêm trạng thái kích hoạt
         })
         print("Created admin user")
 
+        # Tạo user1 (có status = 1)
         user = UserRepository.create({
             'username': 'user1',
             'password': generate_password_hash('user123'),
             'full_name': 'Nguyen Van A',
             'email': 'user1@example.com',
-            'role': 0
+            'role': 0,
+            'status': 1   # thêm trạng thái kích hoạt
         })
         print("Created user1")
 
+        # Tạo lịch sử mô phỏng (gắn với user1)
         SimulationHistoryRepository.create({
             'user_id': user.id,
             'algorithm_id': selection.id,

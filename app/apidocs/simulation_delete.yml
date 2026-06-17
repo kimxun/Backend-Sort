@@ -1,25 +1,29 @@
-Xóa một bản ghi lịch sử mô phỏng
----
+tags:
+  - Simulations
+summary: Xóa một lịch sử mô phỏng
+description: Xóa bản ghi lịch sử mô phỏng theo ID (yêu cầu token).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: sim_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của lịch sử cần xóa
+    example: 1
+
 responses:
   200:
     description: Xóa thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            message:
-              type: string
-  401:
-    description: Unauthorized
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Simulation deleted"
   404:
     description: Không tìm thấy lịch sử
+  401:
+    description: Unauthorized

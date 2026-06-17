@@ -1,43 +1,47 @@
-Lấy chi tiết một lịch sử mô phỏng
----
+tags:
+  - Simulations
+summary: Lấy chi tiết một lịch sử mô phỏng theo ID
+description: Trả về chi tiết một bản ghi lịch sử mô phỏng (yêu cầu token).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: sim_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
+    description: ID của lịch sử cần lấy
+    example: 1
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            user_id:
-              type: integer
-            algorithm_id:
-              type: integer
-            input_data:
-              type: string
-            sorted_result:
-              type: string
-            steps:
-              type: integer
-            comparisons:
-              type: integer
-            swaps:
-              type: integer
-            execution_time_ms:
-              type: integer
-            executed_at:
-              type: string
-              format: date-time
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        algorithm_id:
+          type: integer
+        input_data:
+          type: string
+        sorted_result:
+          type: string
+        steps:
+          type: integer
+        comparisons:
+          type: integer
+        swaps:
+          type: integer
+        execution_time_ms:
+          type: integer
+        executed_at:
+          type: string
+          format: date-time
   404:
-    description: Không tìm thấy
+    description: Không tìm thấy lịch sử
   401:
     description: Unauthorized

@@ -1,45 +1,49 @@
-Lấy lịch sử mô phỏng của một người dùng
----
+tags:
+  - Simulations
+summary: Lấy lịch sử mô phỏng của một người dùng
+description: Trả về các bản ghi lịch sử mô phỏng của user_id chỉ định (yêu cầu token).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: user_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
+    description: ID của người dùng
+    example: 1
+
 responses:
   200:
-    description: Danh sách lịch sử
-    content:
-      application/json:
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              user_id:
-                type: integer
-              algorithm_id:
-                type: integer
-              input_data:
-                type: string
-              sorted_result:
-                type: string
-              steps:
-                type: integer
-              comparisons:
-                type: integer
-              swaps:
-                type: integer
-              execution_time_ms:
-                type: integer
-              executed_at:
-                type: string
-                format: date-time
+    description: Thành công
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          user_id:
+            type: integer
+          algorithm_id:
+            type: integer
+          input_data:
+            type: string
+          sorted_result:
+            type: string
+          steps:
+            type: integer
+          comparisons:
+            type: integer
+          swaps:
+            type: integer
+          execution_time_ms:
+            type: integer
+          executed_at:
+            type: string
+            format: date-time
   404:
-    description: Không tìm thấy user
+    description: Không tìm thấy user hoặc lịch sử
   401:
     description: Unauthorized

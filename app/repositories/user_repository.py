@@ -16,12 +16,14 @@ class UserRepository:
 
     @staticmethod
     def create(data):
+        status = data.get('status', 1)
         user = User(
             username=data['username'],
             password=data['password'],
             full_name=data['full_name'],
             email=data['email'],
-            role=data['role']
+            role=data['role'],
+            status=status
         )
         db.session.add(user)
         db.session.commit()
@@ -36,6 +38,8 @@ class UserRepository:
             user.full_name = data.get('full_name', user.full_name)
             user.email = data.get('email', user.email)
             user.role = data.get('role', user.role)
+            if 'status' in data:
+                user.status = data['status']
             db.session.commit()
         return user
 

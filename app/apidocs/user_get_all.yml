@@ -1,30 +1,38 @@
-Lấy danh sách người dùng (chỉ admin)
----
+tags:
+  - Users
+summary: Lấy danh sách người dùng (chỉ admin)
+description: Trả về danh sách tất cả người dùng (yêu cầu token và quyền admin).
+
 security:
   - BearerAuth: []
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              username:
-                type: string
-              full_name:
-                type: string
-              email:
-                type: string
-              role:
-                type: integer
-              created_at:
-                type: string
-                format: date-time
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 1
+          username:
+            type: string
+            example: admin
+          full_name:
+            type: string
+            example: Administrator
+          email:
+            type: string
+            example: admin@example.com
+          role:
+            type: integer
+            example: 1
+          created_at:
+            type: string
+            format: date-time
+            example: "2026-06-17T21:53:34"
   401:
     description: Unauthorized
   403:
