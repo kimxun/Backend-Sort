@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 from flasgger import swag_from
 from app.repositories.user_repository import UserRepository
 from app.utils.auth_decorator import jwt_required, roles_required
-
+from app.services.user_service import UserService
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 @user_bp.route('', methods=['GET'])
@@ -10,8 +10,11 @@ user_bp = Blueprint('user', __name__, url_prefix='/users')
 @roles_required('admin')
 @swag_from('../apidocs/user_get_all.yml')
 def get_all_users():
-    users = UserRepository.get_all()
-    return jsonify([u.to_dict() for u in users]), 200
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 5, type=int)
+
+    result = UserService.get_all_users(page, limit)
+    return jsonify(result), 200
 
 @user_bp.route('/<int:user_id>', methods=['GET'])
 @jwt_required
