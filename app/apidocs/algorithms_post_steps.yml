@@ -1,60 +1,89 @@
-Lấy danh sách các bước thực hiện của thuật toán
----
+tags:
+  - Algorithms
+
+summary: Lấy danh sách các bước thực hiện của thuật toán
+description: Trả về toàn bộ các bước thực hiện của thuật toán sắp xếp đối với mảng đầu vào.
+
+security:
+  - BearerAuth: []
+
 parameters:
   - name: algorithm_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của thuật toán
+    example: 1
+
   - name: body
     in: body
     required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            array:
-              type: array
-              items:
-                type: integer
-              example: [3, 1, 4, 2]
+    description: Dữ liệu đầu vào
+    schema:
+      type: object
+      required:
+        - array
+      properties:
+        array:
+          type: array
+          items:
+            type: integer
+          example: [3, 1, 4, 2]
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            algorithm_id:
+    schema:
+      type: object
+      properties:
+        algorithm_id:
+          type: integer
+          example: 1
+
+        algorithm_name:
+          type: string
+          example: Quick Sort
+
+        input_array:
+          type: array
+          items:
+            type: integer
+          example: [3, 1, 4, 2]
+
+        sorted_array:
+          type: array
+          items:
+            type: integer
+          example: [1, 2, 3, 4]
+
+        steps:
+          type: integer
+          example: 6
+
+        comparisons:
+          type: integer
+          example: 4
+
+        swaps:
+          type: integer
+          example: 0
+
+        step_by_step:
+          type: array
+          items:
+            type: array
+            items:
               type: integer
-            algorithm_name:
-              type: string
-            input_array:
-              type: array
-              items:
-                type: integer
-            sorted_array:
-              type: array
-              items:
-                type: integer
-            steps:
-              type: integer
-            comparisons:
-              type: integer
-            swaps:
-              type: integer
-            step_by_step:
-              type: array
-              items:
-                type: array
-                items:
-                  type: integer
+          example:
+            - [3, 1, 4, 2]
+            - [1, 3, 4, 2]
+            - [1, 2, 3, 4]
+
   400:
     description: Thiếu tham số hoặc mảng không hợp lệ
+
   404:
     description: Không tìm thấy thuật toán hoặc không hỗ trợ step-by-step
+
   500:
     description: Lỗi server

@@ -11,7 +11,7 @@ user_bp = Blueprint('user', __name__, url_prefix='/users')
 @swag_from('../apidocs/user_get_all.yml')
 def get_all_users():
     page = request.args.get('page', 1, type=int)
-    limit = request.args.get('limit', 10, type=int)
+    limit = request.args.get('limit', 5, type=int)
 
     result = UserService.get_all_users(page, limit)
     return jsonify(result), 200

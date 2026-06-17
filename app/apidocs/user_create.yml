@@ -1,49 +1,62 @@
-Tạo người dùng mới (chỉ admin)
----
+tags:
+  - Users
+summary: Tạo người dùng mới (chỉ admin)
+description: Tạo một tài khoản người dùng mới (yêu cầu token và quyền admin).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: body
     in: body
     required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            username:
-              type: string
-            password:
-              type: string
-            full_name:
-              type: string
-            email:
-              type: string
-            role:
-              type: integer
+    description: Thông tin người dùng
+    schema:
+      type: object
+      required:
+        - username
+        - password
+        - full_name
+        - email
+        - role
+      properties:
+        username:
+          type: string
+          example: user2
+        password:
+          type: string
+          example: "123456"
+        full_name:
+          type: string
+          example: "Nguyen Van B"
+        email:
+          type: string
+          example: "user2@example.com"
+        role:
+          type: integer
+          example: 0
+
 responses:
   201:
     description: Tạo thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            username:
-              type: string
-            full_name:
-              type: string
-            email:
-              type: string
-            role:
-              type: integer
-            created_at:
-              type: string
-              format: date-time
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
   400:
-    description: Thiếu dữ liệu
+    description: Thiếu dữ liệu hoặc lỗi
   401:
     description: Unauthorized
   403:

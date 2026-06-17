@@ -1,35 +1,39 @@
-Lấy thông tin người dùng theo ID (yêu cầu đăng nhập)
----
+tags:
+  - Users
+summary: Lấy thông tin người dùng theo ID
+description: Trả về thông tin của một người dùng (yêu cầu token).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: user_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
+    description: ID của người dùng
+    example: 1
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            username:
-              type: string
-            full_name:
-              type: string
-            email:
-              type: string
-            role:
-              type: integer
-            created_at:
-              type: string
-              format: date-time
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
   404:
-    description: Không tìm thấy
+    description: Không tìm thấy người dùng
   401:
     description: Unauthorized

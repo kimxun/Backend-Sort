@@ -11,6 +11,7 @@ class User(db.Model):
     role = db.Column('vaiTro', db.Integer, default=0)
     created_at = db.Column('ngayTao', db.DateTime, default=db.func.current_timestamp())
     status= db.Column('trangThai', db.Integer, default=1)  # 1: active, 0: inactive
+
     def to_dict(self):
         return {
             "id": self.id,
