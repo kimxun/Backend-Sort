@@ -3,6 +3,7 @@ from app.algorithms import quick_sort_logic as quick_sort
 from app.algorithms import selection_sort_logic as selection_sort
 from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
+from app.models.algorithm import Algorithm
 
 def sort_array_with_metrics(arr, algorithm):
     if not isinstance(arr, list):
@@ -21,8 +22,27 @@ def sort_array_with_metrics(arr, algorithm):
 
 class SortService:
     @staticmethod
-    def get_all_algorithms():
-        return AlgorithmRepository.get_all()
+    def get_all_algorithms(page=None, limit=None):
+        if page is None or limit is None:
+            return AlgorithmRepository.get_all()
+        else:
+            if page < 1:
+                page = 1
+            if limit < 1:
+                limit = 10
+            offset = (page - 1) * limit
+            query = Algorithm.query
+            total = query.count()
+            algorithms = query.offset(offset).limit(limit).all()
+            return {
+                "data": [a.to_dict() for a in algorithms],
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "totalPages": (total + limit - 1) // limit
+                }
+            }
 
     @staticmethod
     def get_algorithm_by_id(algorithm_id):
@@ -50,33 +70,3 @@ class SortService:
     @staticmethod
     def get_user_history(user_id):
         return SimulationHistoryRepository.get_by_user(user_id)
-    
-    @staticmethod
-    def get_all_algorithms(page, limit):
-        if page < 1:
-            page = 1
-        if limit < 1:
-            limit = 10
-
-        offset = (page - 1) * limit
-
-        query = AlgorithmRepository.get_query()
-
-        total = query.count()
-
-        algorithms = (
-            query
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
-
-        return {
-            "data": [a.to_dict() for a in algorithms],
-            "pagination": {
-                "page": page,
-                "limit": limit,
-                "total": total,
-                "totalPages": (total + limit - 1) // limit
-            }
-        }
