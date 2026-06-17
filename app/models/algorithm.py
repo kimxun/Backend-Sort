@@ -12,6 +12,7 @@ class Algorithm(db.Model):
     space_complexity = db.Column('doPhucBoNho', db.String(50))
     category_id = db.Column('loaiThuatToan', db.Integer, db.ForeignKey('LoaiThuatToan.idLoai'))
     slug = db.Column(db.String(50), unique=True, nullable=False)
+    status = db.Column('trangThai', db.Integer, default=1)
 
     simulation_histories = db.relationship('SimulationHistory', backref='algorithm', lazy=True)
 
@@ -24,5 +25,6 @@ class Algorithm(db.Model):
             "time_complexity": self.time_complexity,
             "space_complexity": self.space_complexity,
             "category_id": self.category_id,
-            "slug": self.slug
+            "slug": self.slug,
+            "status": self.status
         }
