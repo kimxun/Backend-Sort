@@ -1,33 +1,49 @@
-tags:
-  - Algorithms
-summary: Lấy danh sách tất cả các thuật toán
-description: Trả về danh sách tất cả các thuật toán sắp xếp có trong hệ thống.
-
+Lấy danh sách tất cả các thuật toán
+---
+parameters:
+  - name: page
+    in: query
+    type: integer
+    required: false
+    description: Số trang (mặc định 1)
+  - name: limit
+    in: query
+    type: integer
+    required: false
+    description: Số bản ghi trên trang (mặc định 5)
 responses:
   200:
     description: Thành công
     schema:
-      type: array
-      items:
-        type: object
-        properties:
-          id:
-            type: integer
-            example: 1
-          name:
-            type: string
-            example: "Selection Sort"
-          slug:
-            type: string
-            example: "selection-sort"
-          description:
-            type: string
-            example: "Thuật toán sắp xếp chọn"
-          time_complexity:
-            type: string
-            example: "O(n^2)"
-          space_complexity:
-            type: string
-            example: "O(1)"
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              slug:
+                type: string
+              description:
+                type: string
+              time_complexity:
+                type: string
+              space_complexity:
+                type: string
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
   500:
     description: Lỗi server

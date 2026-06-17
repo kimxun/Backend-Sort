@@ -18,10 +18,16 @@ ALGO_FUNC_MAP = {
 @swag_from('../apidocs/algorithms_get_all.yml')
 def get_all_algorithms():
     try:
-        page = request.args.get('page', default=1, type=int)
-        limit = request.args.get('limit', default=5, type=int)
-        algorithms = SortService.get_all_algorithms(page, limit)
-        return jsonify(algorithms), 200
+        # Kiểm tra nếu có tham số page → phân trang
+        page = request.args.get('page', None, type=int)
+        if page is not None:
+            limit = request.args.get('limit', 5, type=int)
+            result = SortService.get_all_algorithms(page, limit)
+            return jsonify(result), 200
+        else:
+            # Không có page → trả về toàn bộ danh sách
+            algorithms = SortService.get_all_algorithms()
+            return jsonify([a.to_dict() for a in algorithms]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
