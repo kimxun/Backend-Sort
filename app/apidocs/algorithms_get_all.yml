@@ -1,26 +1,33 @@
-Lấy danh sách tất cả các thuật toán
----
+tags:
+  - Algorithms
+summary: Lấy danh sách tất cả các thuật toán
+description: Trả về danh sách tất cả các thuật toán sắp xếp có trong hệ thống.
+
 responses:
   200:
     description: Thành công
-    content:
-      application/json:
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
-              slug:
-                type: string
-              description:
-                type: string
-              time_complexity:
-                type: string
-              space_complexity:
-                type: string
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 1
+          name:
+            type: string
+            example: "Selection Sort"
+          slug:
+            type: string
+            example: "selection-sort"
+          description:
+            type: string
+            example: "Thuật toán sắp xếp chọn"
+          time_complexity:
+            type: string
+            example: "O(n^2)"
+          space_complexity:
+            type: string
+            example: "O(1)"
   500:
     description: Lỗi server

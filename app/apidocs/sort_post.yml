@@ -1,57 +1,70 @@
-Sắp xếp mảng bằng thuật toán (yêu cầu đăng nhập)
----
+tags:
+  - Sort
+summary: Sắp xếp mảng
+description: Sắp xếp mảng đầu vào bằng thuật toán được chỉ định (yêu cầu đăng nhập).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: body
     in: body
     required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            array:
-              type: array
-              items:
-                type: integer
-              example: [3, 1, 4, 2]
-            algorithm:
-              type: string
-              enum: ["quick_sort", "selection_sort", "interchange_sort"]
-              example: quick_sort
+    description: Dữ liệu đầu vào
+    schema:
+      type: object
+      required:
+        - array
+        - algorithm
+      properties:
+        array:
+          type: array
+          items:
+            type: integer
+          example: [3, 1, 4, 2]
+        algorithm:
+          type: string
+          enum: ["quick_sort", "selection_sort", "interchange_sort"]
+          example: quick_sort
+
 responses:
   200:
-    description: Kết quả sắp xếp
-    content:
-      application/json:
-        schema:
+    description: Thành công
+    schema:
+      type: object
+      properties:
+        original:
+          type: array
+          items:
+            type: integer
+          example: [3, 1, 4, 2]
+        sorted:
+          type: array
+          items:
+            type: integer
+          example: [1, 2, 3, 4]
+        algorithm:
+          type: string
+          example: quick_sort
+        metrics:
           type: object
           properties:
-            original:
-              type: array
-              items:
-                type: integer
-            sorted:
-              type: array
-              items:
-                type: integer
-            algorithm:
-              type: string
-            metrics:
-              type: object
-              properties:
-                steps:
-                  type: integer
-                comparisons:
-                  type: integer
-                swaps:
-                  type: integer
-                execution_time_ms:
-                  type: integer
-            simulation_id:
+            steps:
               type: integer
+              example: 6
+            comparisons:
+              type: integer
+              example: 4
+            swaps:
+              type: integer
+              example: 0
+            execution_time_ms:
+              type: integer
+              example: 0
+        simulation_id:
+          type: integer
+          example: 1
   400:
     description: Thiếu tham số hoặc lỗi
   401:
-    description: Unauthorized
+    description: Unauthorized (token không hợp lệ)

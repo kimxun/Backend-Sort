@@ -1,58 +1,60 @@
-Cập nhật thông tin người dùng (chỉ admin)
----
+tags:
+  - Users
+summary: Cập nhật thông tin người dùng (chỉ admin)
+description: Cập nhật thông tin của một người dùng (yêu cầu token và quyền admin).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: user_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của người dùng cần cập nhật
+    example: 1
   - name: body
     in: body
     required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            username:
-              type: string
-            password:
-              type: string
-            full_name:
-              type: string
-            email:
-              type: string
-            role:
-              type: integer
+    description: Dữ liệu cập nhật
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: integer
+
 responses:
   200:
     description: Cập nhật thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            username:
-              type: string
-            full_name:
-              type: string
-            email:
-              type: string
-            role:
-              type: integer
-            created_at:
-              type: string
-              format: date-time
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+  404:
+    description: Không tìm thấy người dùng
   400:
     description: Dữ liệu không hợp lệ
   401:
     description: Unauthorized
   403:
-    description: Forbidden (không phải admin)
-  404:
-    description: Không tìm thấy người dùng
+    description: Forbidden

@@ -4,6 +4,7 @@ from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
 from app.algorithms.interchange_sort import interchange_sort_logic
 from app.services.sort_service import SortService
+from app.utils.auth_decorator import jwt_required
 
 algorithm_bp = Blueprint('algorithm', __name__)
 
@@ -35,6 +36,7 @@ def get_algorithm(algorithm_id):
         return jsonify({"error": str(e)}), 500
 
 @algorithm_bp.route('/<int:algorithm_id>/steps', methods=['POST'])
+@jwt_required
 @swag_from('../apidocs/algorithms_post_steps.yml')
 def get_algorithm_steps(algorithm_id):
     data = request.get_json()

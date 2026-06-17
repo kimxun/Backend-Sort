@@ -1,70 +1,72 @@
-Cập nhật một bản ghi lịch sử mô phỏng
----
+tags:
+  - Simulations
+summary: Cập nhật lịch sử mô phỏng
+description: Cập nhật thông tin của một bản ghi lịch sử mô phỏng (yêu cầu token).
+
 security:
   - BearerAuth: []
+
 parameters:
   - name: sim_id
     in: path
     required: true
-    schema:
-      type: integer
+    type: integer
     description: ID của lịch sử cần cập nhật
+    example: 1
   - name: body
     in: body
     required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            user_id:
-              type: integer
-            algorithm_id:
-              type: integer
-            input_data:
-              type: string
-            sorted_result:
-              type: string
-            steps:
-              type: integer
-            comparisons:
-              type: integer
-            swaps:
-              type: integer
-            execution_time_ms:
-              type: integer
+    description: Dữ liệu cập nhật
+    schema:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        algorithm_id:
+          type: integer
+        input_data:
+          type: string
+        sorted_result:
+          type: string
+        steps:
+          type: integer
+        comparisons:
+          type: integer
+        swaps:
+          type: integer
+        execution_time_ms:
+          type: integer
+
 responses:
   200:
     description: Cập nhật thành công
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            user_id:
-              type: integer
-            algorithm_id:
-              type: integer
-            input_data:
-              type: string
-            sorted_result:
-              type: string
-            steps:
-              type: integer
-            comparisons:
-              type: integer
-            swaps:
-              type: integer
-            execution_time_ms:
-              type: integer
-            executed_at:
-              type: string
-              format: date-time
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        algorithm_id:
+          type: integer
+        input_data:
+          type: string
+        sorted_result:
+          type: string
+        steps:
+          type: integer
+        comparisons:
+          type: integer
+        swaps:
+          type: integer
+        execution_time_ms:
+          type: integer
+        executed_at:
+          type: string
+          format: date-time
+  404:
+    description: Không tìm thấy lịch sử
   400:
     description: Dữ liệu không hợp lệ
   401:
     description: Unauthorized
-  404:
-    description: Không tìm thấy lịch sử
