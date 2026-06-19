@@ -8,7 +8,10 @@ from app.config.config import Config
 from app.database.db import db
 from app.controllers.algorithm_controller import algorithm_bp
 from app.controllers.auth_controller import auth_bp
-
+from app.models.algorithm import Algorithm
+from app.models.algorithm_category import AlgorithmCategory
+from app.models.simulation_history import SimulationHistory
+from app.models.user import User
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -29,7 +32,7 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app)
 
 db.init_app(app)
-CORS(app)
+CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')
 app.register_blueprint(user_bp, url_prefix='/api/users')

@@ -53,6 +53,10 @@ class SortService:
         return AlgorithmRepository.get_by_slug(slug)
 
     @staticmethod
+    def create_algorithm(data):
+        return AlgorithmRepository.create(data)
+
+    @staticmethod
     def save_simulation(user_id, algorithm_id, input_data, sorted_result,
                         steps, comparisons, swaps, execution_time_ms):
         data = {
@@ -70,3 +74,11 @@ class SortService:
     @staticmethod
     def get_user_history(user_id):
         return SimulationHistoryRepository.get_by_user(user_id)
+
+    @staticmethod
+    def update_algorithm(algorithm_id, data):
+        return AlgorithmRepository.update(algorithm_id, data)
+
+    @staticmethod
+    def delete_algorithm(algorithm_id):
+        return AlgorithmRepository.delete(algorithm_id)

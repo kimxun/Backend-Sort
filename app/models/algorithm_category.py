@@ -1,7 +1,7 @@
 from app.database.db import db
 
 class AlgorithmCategory(db.Model):
-    __tablename__ = 'LoaiThuatToan'
+    __tablename__ = 'loaithuattoan'
 
     id = db.Column('idLoai', db.Integer, primary_key=True, autoincrement=True)
     name = db.Column('tenThuatToan', db.String(50))

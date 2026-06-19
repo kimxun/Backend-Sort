@@ -2,7 +2,7 @@ from app.database.db import db
 
 
 class Algorithm(db.Model):
-    __tablename__ = 'ThuatToan'
+    __tablename__ = 'thuattoan'
 
     id = db.Column('idThuatToan', db.Integer, primary_key=True, autoincrement=True)
     name = db.Column('tenThuatToan', db.String(50), nullable=False)
@@ -11,7 +11,7 @@ class Algorithm(db.Model):
     time_complexity = db.Column('doPhucTapThoiGian', db.String(50))
     space_complexity = db.Column('doPhucBoNho', db.String(50))
     steps = db.Column('cacBuoc', db.Text)
-    category_id = db.Column('loaiThuatToan', db.Integer, db.ForeignKey('LoaiThuatToan.idLoai'))
+    category_id = db.Column('loaiThuatToan', db.Integer, db.ForeignKey('loaithuattoan.idLoai'))
     slug = db.Column(db.String(50), unique=True, nullable=False)
     status = db.Column('trangThai', db.Integer, default=1)
 

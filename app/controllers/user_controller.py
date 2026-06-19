@@ -3,16 +3,16 @@ from flasgger import swag_from
 from app.repositories.user_repository import UserRepository
 from app.utils.auth_decorator import jwt_required, roles_required
 from app.services.user_service import UserService
+
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 @user_bp.route('', methods=['GET'])
 @jwt_required
-@roles_required('admin')
+@roles_required(1)
 @swag_from('../apidocs/user_get_all.yml')
 def get_all_users():
     page = request.args.get('page', 1, type=int)
     limit = request.args.get('limit', 5, type=int)
-
     result = UserService.get_all_users(page, limit)
     return jsonify(result), 200
 
@@ -27,7 +27,7 @@ def get_user(user_id):
 
 @user_bp.route('', methods=['POST'])
 @jwt_required
-@roles_required('admin')
+@roles_required(1)
 @swag_from('../apidocs/user_create.yml')
 def create_user():
     data = request.get_json()
@@ -42,7 +42,7 @@ def create_user():
 
 @user_bp.route('/<int:user_id>', methods=['PUT'])
 @jwt_required
-@roles_required('admin')
+@roles_required(1)
 @swag_from('../apidocs/user_update.yml')
 def update_user(user_id):
     data = request.get_json()
@@ -53,7 +53,7 @@ def update_user(user_id):
 
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required
-@roles_required('admin')
+@roles_required(1)
 @swag_from('../apidocs/user_delete.yml')
 def delete_user(user_id):
     success = UserRepository.delete(user_id)

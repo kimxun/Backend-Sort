@@ -15,6 +15,10 @@ class UserRepository:
         return User.query.filter_by(username=username).first()
 
     @staticmethod
+    def get_query():
+        return User.query
+
+    @staticmethod
     def create(data):
         status = data.get('status', 1)
         user = User(
