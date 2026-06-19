@@ -10,6 +10,7 @@ class Algorithm(db.Model):
     description = db.Column('moTa', db.String(255))
     time_complexity = db.Column('doPhucTapThoiGian', db.String(50))
     space_complexity = db.Column('doPhucBoNho', db.String(50))
+    steps = db.Column('cacBuoc', db.Text)
     category_id = db.Column('loaiThuatToan', db.Integer, db.ForeignKey('LoaiThuatToan.idLoai'))
     slug = db.Column(db.String(50), unique=True, nullable=False)
     status = db.Column('trangThai', db.Integer, default=1)
@@ -17,6 +18,7 @@ class Algorithm(db.Model):
     simulation_histories = db.relationship('SimulationHistory', backref='algorithm', lazy=True)
 
     def to_dict(self):
+        import json
         return {
             "id": self.id,
             "name": self.name,
@@ -24,6 +26,7 @@ class Algorithm(db.Model):
             "description": self.description,
             "time_complexity": self.time_complexity,
             "space_complexity": self.space_complexity,
+            "steps": json.loads(self.steps) if self.steps else [],
             "category_id": self.category_id,
             "slug": self.slug,
             "status": self.status
