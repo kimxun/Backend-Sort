@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask
@@ -30,9 +31,16 @@ def seed():
         selection = AlgorithmRepository.create({
             'name': 'Selection Sort',
             'code': 'void selection_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tint min_idx = i;\n\t\tfor (int j = i+1; j < n; j++)\n\t\t\tif (arr[j] < arr[min_idx])\n\t\t\t\tmin_idx = j;\n\t\tswap(arr[i], arr[min_idx]);\n\t}\n}',
-            'description': 'Selection sort algorithm',
+            'description': 'Tìm phần tử nhỏ nhất trong phần chưa sắp xếp, đặt vào đầu danh sách. Lặp lại cho đến hết.',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
+            'steps': json.dumps([
+            'Đặt i = 0, minIdx = i',
+            'Duyệt j từ i+1 đến cuối',
+            'Nếu a[j] < a[minIdx] → minIdx = j',
+            'Hoán đổi a[i] ↔ a[minIdx]',
+            'Tăng i, lặp lại'
+        ]),
             'category_id': cat_sort.id,
             'slug': 'selection-sort',
             'status': 1
@@ -42,9 +50,15 @@ def seed():
         quick = AlgorithmRepository.create({
             'name': 'Quick Sort',
             'code': 'int partition(int arr[], int low, int high) {\n\tint pivot = arr[high];\n\tint i = low - 1;\n\tfor (int j = low; j < high; j++) {\n\t\tif (arr[j] <= pivot) {\n\t\t\ti++;\n\t\t\tswap(arr[i], arr[j]);\n\t\t}\n\t}\n\tswap(arr[i+1], arr[high]);\n\treturn i+1;\n}\n\nvoid quick_sort(int arr[], int low, int high) {\n\tif (low < high) {\n\t\tint pi = partition(arr, low, high);\n\t\tquick_sort(arr, low, pi-1);\n\t\tquick_sort(arr, pi+1, high);\n\t}\n}',
-            'description': 'Quick sort algorithm',
+            'description': 'Chọn một phần tử làm mốc, sau đó chia mảng thành hai phần: phần tử nhỏ hơn mốc và phần tử lớn hơn mốc. Lặp lại quy trình cho từng phần.',
             'time_complexity': 'O(n log n)',
             'space_complexity': 'O(log n)',
+            'steps': json.dumps([
+            'Chọn pivot = a[right]',
+            'Phân vùng: đưa phần tử ≤ pivot sang trái',
+            'Đặt pivot vào đúng vị trí',
+            'Đệ quy với 2 nửa'
+        ]),
             'category_id': cat_sort.id,
             'slug': 'quick-sort',
             'status': 1
@@ -54,11 +68,17 @@ def seed():
         interchange = AlgorithmRepository.create({
             'name': 'Interchange Sort',
             'code': 'void interchange_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tfor (int j = i+1; j < n; j++) {\n\t\t\tif (arr[i] > arr[j]) {\n\t\t\t\tswap(arr[i], arr[j]);\n\t\t\t}\n\t\t}\n\t}\n}',
-            'description': 'Interchange sort algorithm',
+            'description': 'So sánh từng cặp phần tử theo thứ tự và hoán đổi ngay nếu chúng không đúng vị trí.',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
             'category_id': cat_sort.id,
             'slug': 'interchange-sort',
+            'steps': json.dumps([
+            'Duyệt i từ 0 đến n-2',
+            'Duyệt j từ i+1 đến n-1',
+            'Nếu a[i] > a[j] → hoán đổi a[i] ↔ a[j]',
+            'Tăng i, lặp lại'
+        ]),
             'status': 1
         })
         print("Created algorithm: Interchange Sort")

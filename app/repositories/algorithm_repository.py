@@ -22,6 +22,7 @@ class AlgorithmRepository:
             description=data['description'],
             time_complexity=data['time_complexity'],
             space_complexity=data['space_complexity'],
+            steps=data.get('steps'),
             category_id=data['category_id'],
             slug=data['slug']
         )
@@ -38,6 +39,7 @@ class AlgorithmRepository:
             algorithm.description = data.get('description', algorithm.description)
             algorithm.time_complexity = data.get('time_complexity', algorithm.time_complexity)
             algorithm.space_complexity = data.get('space_complexity', algorithm.space_complexity)
+            algorithm.steps = data.get('steps', algorithm.steps)
             algorithm.category_id = data.get('category_id', algorithm.category_id)
             algorithm.slug = data.get('slug', algorithm.slug)
             db.session.commit()
