@@ -1,10 +1,11 @@
 from flask import jsonify, Blueprint, request
 from flasgger import swag_from
+import traceback
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
 from app.algorithms.interchange_sort import interchange_sort_logic
 from app.services.sort_service import SortService
-from app.utils.auth_decorator import jwt_required
+from app.utils.auth_decorator import jwt_required, roles_required
 
 algorithm_bp = Blueprint('algorithm', __name__)
 
@@ -18,17 +19,50 @@ ALGO_FUNC_MAP = {
 @swag_from('../apidocs/algorithms_get_all.yml')
 def get_all_algorithms():
     try:
-        # Kiểm tra nếu có tham số page → phân trang
         page = request.args.get('page', None, type=int)
         if page is not None:
             limit = request.args.get('limit', 5, type=int)
             result = SortService.get_all_algorithms(page, limit)
             return jsonify(result), 200
         else:
-            # Không có page → trả về toàn bộ danh sách
             algorithms = SortService.get_all_algorithms()
             return jsonify([a.to_dict() for a in algorithms]), 200
     except Exception as e:
+        print("LỖI GET /algorithms:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@algorithm_bp.route('', methods=['POST'])
+@jwt_required
+@roles_required(1)
+def create_algorithm():
+    try:
+        data = request.get_json()
+        required = ['name', 'slug']
+        if not all(k in data for k in required):
+            return jsonify({"error": f"Missing required fields: {required}"}), 400
+
+        # Gán giá trị mặc định
+        if 'category_id' not in data:
+            data['category_id'] = 1
+        if 'status' not in data:
+            data['status'] = 1
+        if 'code' not in data:
+            data['code'] = ''
+        if 'description' not in data:
+            data['description'] = ''
+        if 'time_complexity' not in data:
+            data['time_complexity'] = ''
+        if 'space_complexity' not in data:
+            data['space_complexity'] = ''
+        if 'steps' not in data:
+            data['steps'] = None   # hoặc '[]'
+
+        new_algorithm = SortService.create_algorithm(data)
+        return jsonify(new_algorithm.to_dict()), 201
+    except Exception as e:
+        print("LỖI POST /algorithms:", e)
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @algorithm_bp.route('/<int:algorithm_id>', methods=['GET'])
@@ -40,6 +74,8 @@ def get_algorithm(algorithm_id):
             return jsonify({"error": "Algorithm not found"}), 404
         return jsonify(algorithm.to_dict()), 200
     except Exception as e:
+        print("LỖI GET /algorithms/<id>:", e)
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @algorithm_bp.route('/<int:algorithm_id>/steps', methods=['POST'])
@@ -74,4 +110,35 @@ def get_algorithm_steps(algorithm_id):
             "step_by_step": steps_history
         }), 200
     except Exception as e:
+        print("LỖI POST /steps:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@algorithm_bp.route('/<int:algorithm_id>', methods=['PUT'])
+@jwt_required
+@roles_required(1)
+def update_algorithm(algorithm_id):
+    try:
+        data = request.get_json()
+        updated = SortService.update_algorithm(algorithm_id, data)
+        if not updated:
+            return jsonify({"error": "Algorithm not found"}), 404
+        return jsonify(updated.to_dict()), 200
+    except Exception as e:
+        print("LỖI PUT /algorithms/<id>:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@algorithm_bp.route('/<int:algorithm_id>', methods=['DELETE'])
+@jwt_required
+@roles_required(1)
+def delete_algorithm(algorithm_id):
+    try:
+        success = SortService.delete_algorithm(algorithm_id)
+        if not success:
+            return jsonify({"error": "Algorithm not found"}), 404
+        return jsonify({"message": "Algorithm deleted"}), 200
+    except Exception as e:
+        print("LỖI DELETE /algorithms/<id>:", e)
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500

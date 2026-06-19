@@ -15,16 +15,21 @@ class AlgorithmRepository:
         return Algorithm.query.filter_by(slug=slug).first()
 
     @staticmethod
+    def get_query():
+        return Algorithm.query
+
+    @staticmethod
     def create(data):
         algorithm = Algorithm(
             name=data['name'],
-            code=data['code'],
-            description=data['description'],
-            time_complexity=data['time_complexity'],
-            space_complexity=data['space_complexity'],
+            code=data.get('code', ''),
+            description=data.get('description', ''),
+            time_complexity=data.get('time_complexity', ''),
+            space_complexity=data.get('space_complexity', ''),
             steps=data.get('steps'),
-            category_id=data['category_id'],
-            slug=data['slug']
+            category_id=data.get('category_id', 1),
+            slug=data['slug'],
+            status=data.get('status', 1)
         )
         db.session.add(algorithm)
         db.session.commit()
@@ -42,6 +47,8 @@ class AlgorithmRepository:
             algorithm.steps = data.get('steps', algorithm.steps)
             algorithm.category_id = data.get('category_id', algorithm.category_id)
             algorithm.slug = data.get('slug', algorithm.slug)
+            if 'status' in data:
+                algorithm.status = data['status']
             db.session.commit()
         return algorithm
 
