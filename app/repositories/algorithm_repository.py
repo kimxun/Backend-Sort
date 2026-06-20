@@ -1,10 +1,13 @@
 from app.database.db import db
 from app.models.algorithm import Algorithm
 from app.config.cache import cache
+
 class AlgorithmRepository:
     @staticmethod
-    def get_all():
-        return Algorithm.query.all()
+    def get_all(is_admin=False):
+        if is_admin:
+            return Algorithm.query.filter(Algorithm.status != -1).all()
+        return Algorithm.query.filter_by(status=1).all()
 
     @staticmethod
     def get_by_id(algorithm_id):
@@ -33,6 +36,8 @@ class AlgorithmRepository:
         )
         db.session.add(algorithm)
         db.session.commit()
+        cache.delete('algorithms_all')
+        cache.delete('algorithms_admin_all')
         return algorithm
 
     @staticmethod
@@ -50,13 +55,19 @@ class AlgorithmRepository:
             if 'status' in data:
                 algorithm.status = data['status']
             db.session.commit()
+            cache.delete('algorithms_all')
+            cache.delete('algorithms_admin_all')
+            cache.delete(f'algorithm_{algorithm_id}')
         return algorithm
 
     @staticmethod
     def delete(algorithm_id):
         algorithm = Algorithm.query.get(algorithm_id)
         if algorithm:
-            algorithm.status = 0
+            algorithm.status = -1
             db.session.commit()
+            cache.delete('algorithms_all')
+            cache.delete('algorithms_admin_all')
+            cache.delete(f'algorithm_{algorithm_id}')
             return True
         return False
