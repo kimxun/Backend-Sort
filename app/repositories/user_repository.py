@@ -4,7 +4,7 @@ from app.models.user import User
 class UserRepository:
     @staticmethod
     def get_all():
-        return User.query.filter_by(status=1).all()
+        return User.query.all()
 
     @staticmethod
     def get_by_id(user_id):
