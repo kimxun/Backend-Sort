@@ -4,7 +4,7 @@ from app.algorithms import selection_sort_logic as selection_sort
 from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from app.models.algorithm import Algorithm
-
+from app.config.cache import cache
 def sort_array_with_metrics(arr, algorithm):
     if not isinstance(arr, list):
         raise ValueError("Input must be a list")
@@ -22,6 +22,7 @@ def sort_array_with_metrics(arr, algorithm):
 
 class SortService:
     @staticmethod
+    @cache.cached(timeout=300, key_prefix='all_algorithms')
     def get_all_algorithms(page=None, limit=None):
         if page is None or limit is None:
             return AlgorithmRepository.get_all()
@@ -45,6 +46,7 @@ class SortService:
             }
 
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_algorithm_by_id(algorithm_id):
         return AlgorithmRepository.get_by_id(algorithm_id)
 
@@ -77,8 +79,12 @@ class SortService:
 
     @staticmethod
     def update_algorithm(algorithm_id, data):
+        cache.delete_memoized(SortService.get_algorithm_by_id, algorithm_id)
+        cache.delete('all_algorithms')
         return AlgorithmRepository.update(algorithm_id, data)
 
     @staticmethod
     def delete_algorithm(algorithm_id):
+        cache.delete_memoized(SortService.get_algorithm_by_id, algorithm_id)
+        cache.delete('all_algorithms')
         return AlgorithmRepository.delete(algorithm_id)

@@ -12,6 +12,7 @@ from app.models.algorithm import Algorithm
 from app.models.algorithm_category import AlgorithmCategory
 from app.models.simulation_history import SimulationHistory
 from app.models.user import User
+from app.config.cache import cache
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -32,6 +33,7 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app)
 
 db.init_app(app)
+cache.init_app(app)
 CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')

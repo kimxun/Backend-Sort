@@ -4,7 +4,7 @@ from app.models.user import User
 class UserRepository:
     @staticmethod
     def get_all():
-        return User.query.all()
+        return User.query.filter_by(status=1).all()
 
     @staticmethod
     def get_by_id(user_id):
@@ -51,7 +51,7 @@ class UserRepository:
     def delete(user_id):
         user = User.query.get(user_id)
         if user:
-            db.session.delete(user)
+            user.status = 0
             db.session.commit()
             return True
         return False
