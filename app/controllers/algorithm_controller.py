@@ -1,6 +1,7 @@
-from flask import jsonify, Blueprint, request
+from flask import jsonify, Blueprint, request, current_app
 from flasgger import swag_from
 import traceback
+import jwt
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
 from app.algorithms.interchange_sort import interchange_sort_logic
@@ -15,17 +16,29 @@ ALGO_FUNC_MAP = {
     'interchange-sort': interchange_sort_logic,
 }
 
+def _is_admin_request():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return False
+    token = auth_header.split(' ')[1]
+    try:
+        payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload.get('role') == 1
+    except:
+        return False
+
 @algorithm_bp.route('', methods=['GET'])
 @swag_from('../apidocs/algorithms_get_all.yml')
 def get_all_algorithms():
     try:
+        is_admin = _is_admin_request()
         page = request.args.get('page', None, type=int)
         if page is not None:
             limit = request.args.get('limit', 5, type=int)
-            result = SortService.get_all_algorithms(page, limit)
+            result = SortService.get_all_algorithms(page, limit, is_admin=is_admin)
             return jsonify(result), 200
         else:
-            algorithms = SortService.get_all_algorithms()
+            algorithms = SortService.get_all_algorithms(is_admin=is_admin)
             return jsonify([a.to_dict() for a in algorithms]), 200
     except Exception as e:
         print("LỖI GET /algorithms:", e)
@@ -42,7 +55,6 @@ def create_algorithm():
         if not all(k in data for k in required):
             return jsonify({"error": f"Missing required fields: {required}"}), 400
 
-        # Gán giá trị mặc định
         if 'category_id' not in data:
             data['category_id'] = 1
         if 'status' not in data:
@@ -56,7 +68,7 @@ def create_algorithm():
         if 'space_complexity' not in data:
             data['space_complexity'] = ''
         if 'steps' not in data:
-            data['steps'] = None   # hoặc '[]'
+            data['steps'] = None
 
         new_algorithm = SortService.create_algorithm(data)
         return jsonify(new_algorithm.to_dict()), 201
