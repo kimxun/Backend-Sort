@@ -1,6 +1,6 @@
 from app.database.db import db
 from app.models.algorithm import Algorithm
-
+from app.config.cache import cache
 class AlgorithmRepository:
     @staticmethod
     def get_all():
@@ -56,7 +56,7 @@ class AlgorithmRepository:
     def delete(algorithm_id):
         algorithm = Algorithm.query.get(algorithm_id)
         if algorithm:
-            db.session.delete(algorithm)
+            algorithm.status = 0
             db.session.commit()
             return True
         return False
