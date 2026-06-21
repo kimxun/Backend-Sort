@@ -22,3 +22,25 @@ def login():
             "success": False,
             "message": str(e)
         }), 401
+
+@auth_bp.route("/register", methods=["POST"])
+@swag_from('../apidocs/auth_register.yml')
+def register():
+    data = request.get_json() or {}
+
+    try:
+        result = AuthService.register(data)
+        return jsonify({
+            "success": True,
+            "data": result
+        }), 201
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
