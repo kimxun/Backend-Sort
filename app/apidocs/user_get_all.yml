@@ -6,6 +6,18 @@ description: Trả về danh sách tất cả người dùng (yêu cầu token v
 security:
   - BearerAuth: []
 
+parameters:
+  - name: page
+    in: query
+    type: integer
+    default: 1
+    description: Số trang hiện tại
+  - name: limit
+    in: query
+    type: integer
+    default: 5
+    description: Số lượng user trên mỗi trang
+    
 responses:
   200:
     description: Thành công

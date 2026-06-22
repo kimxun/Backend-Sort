@@ -4,16 +4,19 @@ from app.config.cache import cache
 
 class AlgorithmRepository:
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_all(is_admin=False):
         if is_admin:
             return Algorithm.query.filter(Algorithm.status != -1).all()
         return Algorithm.query.filter_by(status=1).all()
 
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_by_id(algorithm_id):
         return Algorithm.query.get(algorithm_id)
 
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_by_slug(slug):
         return Algorithm.query.filter_by(slug=slug).first()
 
@@ -36,8 +39,9 @@ class AlgorithmRepository:
         )
         db.session.add(algorithm)
         db.session.commit()
-        cache.delete('algorithms_all')
-        cache.delete('algorithms_admin_all')
+        cache.delete_memoized(AlgorithmRepository.get_all)
+        cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm.id)
+        cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
         return algorithm
 
     @staticmethod
@@ -55,9 +59,9 @@ class AlgorithmRepository:
             if 'status' in data:
                 algorithm.status = data['status']
             db.session.commit()
-            cache.delete('algorithms_all')
-            cache.delete('algorithms_admin_all')
-            cache.delete(f'algorithm_{algorithm_id}')
+            cache.delete_memoized(AlgorithmRepository.get_all)
+            cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm.id)
+            cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
         return algorithm
 
     @staticmethod
@@ -66,8 +70,8 @@ class AlgorithmRepository:
         if algorithm:
             algorithm.status = -1
             db.session.commit()
-            cache.delete('algorithms_all')
-            cache.delete('algorithms_admin_all')
-            cache.delete(f'algorithm_{algorithm_id}')
+            cache.delete_memoized(AlgorithmRepository.get_all)
+            cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm.id)
+            cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
             return True
         return False
