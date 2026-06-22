@@ -101,6 +101,8 @@ def get_algorithm_steps(algorithm_id):
     if not isinstance(input_array, list):
         return jsonify({"error": "'array' must be a list"}), 400
 
+    sort_order = data.get('sortOrder', 'asc')
+
     algorithm = SortService.get_algorithm_by_id(algorithm_id)
     if not algorithm:
         return jsonify({"error": "Algorithm not found"}), 404
@@ -110,7 +112,7 @@ def get_algorithm_steps(algorithm_id):
         return jsonify({"error": "Algorithm does not support step-by-step"}), 400
 
     try:
-        sorted_arr, steps, comparisons, swaps, steps_history = func(input_array)
+        sorted_arr, steps, comparisons, swaps, steps_history = func(input_array, sort_order)
         return jsonify({
             "algorithm_id": algorithm_id,
             "algorithm_name": algorithm.name,

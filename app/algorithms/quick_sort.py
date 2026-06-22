@@ -1,4 +1,4 @@
-def quick_sort_logic(arr):
+def quick_sort_logic(arr, sort_order="asc"):
     steps_history = []
     sorted_arr = arr.copy()
     n = len(sorted_arr)
@@ -50,7 +50,9 @@ def quick_sort_logic(arr):
                 "pivot": high,
                 "sorted": list(sorted_indices)
             })
-            if arr[j] <= pivot:
+
+            condition = arr[j] <= pivot if sort_order == "asc" else arr[j] >= pivot
+            if condition:
                 i += 1
                 arr[i], arr[j] = arr[j], arr[i]
                 partition_steps.append({

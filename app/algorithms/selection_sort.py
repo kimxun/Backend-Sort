@@ -1,4 +1,4 @@
-def selection_sort_logic(arr):
+def selection_sort_logic(arr, sort_order="asc"):
     steps_history = []
     comparisons = 0
     swaps = 0
@@ -24,7 +24,10 @@ def selection_sort_logic(arr):
                 "pivot": None,
                 "sorted": list(range(i))
             })
-            if sorted_arr[j] < sorted_arr[min_idx]:
+
+            condition = sorted_arr[j] < sorted_arr[min_idx] if sort_order == "asc" else sorted_arr[j] > sorted_arr[
+                min_idx]
+            if condition:
                 min_idx = j
         if min_idx != i:
             sorted_arr[i], sorted_arr[min_idx] = sorted_arr[min_idx], sorted_arr[i]

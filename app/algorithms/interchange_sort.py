@@ -1,4 +1,4 @@
-def interchange_sort_logic(arr):
+def interchange_sort_logic(arr, sort_order="asc"):
     steps_history = []
     comparisons = 0
     swaps = 0
@@ -23,7 +23,10 @@ def interchange_sort_logic(arr):
                 "pivot": None,
                 "sorted": []
             })
-            if sorted_arr[i] > sorted_arr[j]:
+
+            condition = sorted_arr[i] > sorted_arr[j] if sort_order == "asc" else sorted_arr[i] < sorted_arr[j]
+
+            if condition:
                 sorted_arr[i], sorted_arr[j] = sorted_arr[j], sorted_arr[i]
                 swaps += 1
                 steps_history.append({
