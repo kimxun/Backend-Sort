@@ -53,21 +53,23 @@ def roles_required(*roles):
         def decorated(*args, **kwargs):
 
             current_user = getattr(g, "current_user", None)
-
+            print("Current User in roles_required:", current_user)
             if not current_user:
                 return jsonify({
                     "message": "Chưa xác thực"
                 }), 401
 
             user_role = current_user.get("role")
-
+            print("User Role:", user_role)
             if user_role not in roles:
                 return jsonify({
                     "message": "Bạn không có quyền truy cập"
                 }), 403
 
             return f(*args, **kwargs)
+        
 
         return decorated
+    
 
     return decorator

@@ -12,6 +12,8 @@ class UserService:
         query = UserRepository.get_query()
 
         total = query.count()
+        total_active = query.filter_by(status=1).count()
+        total_admin = query.filter_by(role=1).count()
 
         users = (
             query
@@ -26,6 +28,8 @@ class UserService:
                 "page": page,
                 "limit": limit,
                 "total": total,
-                "totalPages": (total + limit - 1) // limit
+                "totalPages": (total + limit - 1) // limit,
+                "totalActive": total_active,
+                "totalAdmin": total_admin
             }
         }

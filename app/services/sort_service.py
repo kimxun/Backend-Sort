@@ -4,6 +4,8 @@ from app.algorithms import selection_sort_logic as selection_sort
 from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from app.models.algorithm import Algorithm
+from app.config.cache import cache
+def sort_array_with_metrics(arr, algorithm):
 
 def sort_array_with_metrics(arr, algorithm, sort_order="asc"):
     if not isinstance(arr, list):

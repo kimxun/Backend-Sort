@@ -31,13 +31,16 @@ def get_user(user_id):
 @swag_from('../apidocs/user_create.yml')
 def create_user():
     data = request.get_json()
+    print("🔥 RAW DATA:", data)
+    print("🔥 TYPE:", type(data))
     required = ['username', 'password', 'full_name', 'email', 'role']
     if not all(k in data for k in required):
         return jsonify({"error": f"Missing fields, required: {required}"}), 400
     try:
-        user = UserRepository.create(data)
-        return jsonify(user.to_dict()), 201
+      user = UserRepository.create(data)
+      return jsonify(user.to_dict()), 201
     except Exception as e:
+        print("🔥 ERROR FULL:", repr(e))   # 👈 THÊM DÒNG NÀY
         return jsonify({"error": str(e)}), 400
 
 @user_bp.route('/<int:user_id>', methods=['PUT'])
