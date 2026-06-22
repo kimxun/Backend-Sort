@@ -1,6 +1,7 @@
 from flask import jsonify, Blueprint, request, current_app
 from flasgger import swag_from
 import traceback
+import json
 import jwt
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
@@ -16,6 +17,7 @@ ALGO_FUNC_MAP = {
     'interchange-sort': interchange_sort_logic,
 }
 
+
 def _is_admin_request():
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
@@ -26,6 +28,7 @@ def _is_admin_request():
         return payload.get('role') == 1
     except:
         return False
+
 
 @algorithm_bp.route('', methods=['GET'])
 @swag_from('../apidocs/algorithms_get_all.yml')
@@ -45,6 +48,7 @@ def get_all_algorithms():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+
 @algorithm_bp.route('', methods=['POST'])
 @jwt_required
 @roles_required(1)
@@ -55,20 +59,19 @@ def create_algorithm():
         if not all(k in data for k in required):
             return jsonify({"error": f"Missing required fields: {required}"}), 400
 
-        if 'category_id' not in data:
-            data['category_id'] = 1
-        if 'status' not in data:
-            data['status'] = 1
-        if 'code' not in data:
-            data['code'] = ''
-        if 'description' not in data:
-            data['description'] = ''
-        if 'time_complexity' not in data:
-            data['time_complexity'] = ''
-        if 'space_complexity' not in data:
-            data['space_complexity'] = ''
-        if 'steps' not in data:
-            data['steps'] = None
+        data.setdefault('category_id', 1)
+        data.setdefault('status', 1)
+        data.setdefault('code', '')
+        data.setdefault('description', '')
+        data.setdefault('time_complexity', '')
+        data.setdefault('space_complexity', '')
+        data.setdefault('steps', None)
+
+        if 'steps' in data and data['steps'] is not None:
+            if isinstance(data['steps'], list):
+                data['steps'] = json.dumps(data['steps'])
+            elif isinstance(data['steps'], str) and data['steps'].strip() == '':
+                data['steps'] = None
 
         new_algorithm = SortService.create_algorithm(data)
         return jsonify(new_algorithm.to_dict()), 201
@@ -76,6 +79,7 @@ def create_algorithm():
         print("LỖI POST /algorithms:", e)
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @algorithm_bp.route('/<int:algorithm_id>', methods=['GET'])
 @swag_from('../apidocs/algorithms_get_one.yml')
@@ -89,6 +93,7 @@ def get_algorithm(algorithm_id):
         print("LỖI GET /algorithms/<id>:", e)
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @algorithm_bp.route('/<int:algorithm_id>/steps', methods=['POST'])
 @jwt_required
@@ -128,12 +133,19 @@ def get_algorithm_steps(algorithm_id):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+
 @algorithm_bp.route('/<int:algorithm_id>', methods=['PUT'])
 @jwt_required
 @roles_required(1)
 def update_algorithm(algorithm_id):
     try:
         data = request.get_json()
+        if 'steps' in data and data['steps'] is not None:
+            if isinstance(data['steps'], list):
+                data['steps'] = json.dumps(data['steps'])
+            elif isinstance(data['steps'], str) and data['steps'].strip() == '':
+                data['steps'] = None
+
         updated = SortService.update_algorithm(algorithm_id, data)
         if not updated:
             return jsonify({"error": "Algorithm not found"}), 404
@@ -142,6 +154,7 @@ def update_algorithm(algorithm_id):
         print("LỖI PUT /algorithms/<id>:", e)
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @algorithm_bp.route('/<int:algorithm_id>', methods=['DELETE'])
 @jwt_required

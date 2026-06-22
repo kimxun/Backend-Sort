@@ -13,6 +13,7 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from werkzeug.security import generate_password_hash
 from app.config.cache import cache
+
 def seed():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -31,7 +32,7 @@ def seed():
 
         selection = AlgorithmRepository.create({
             'name': 'Selection Sort',
-            'code': 'void selection_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tint min_idx = i;\n\t\tfor (int j = i+1; j < n; j++)\n\t\t\tif (arr[j] < arr[min_idx])\n\t\t\t\tmin_idx = j;\n\t\tswap(arr[i], arr[min_idx]);\n\t}\n}',
+            'code': 'void SelectionSort(int a[], int N) {\n\tint min;\n\tfor( int i = 0; i < N-1; i++ ) {\n\t\tmin = i;\n\t\tfor ( int j = i+1; j < N; j++ )\n\t\t\tif (a[j] < a[min])\n\t\t\t\tmin = j;\n\t\tswap( a[min], a[i] );\n\t}\n}',
             'description': 'Tìm phần tử nhỏ nhất trong phần chưa sắp xếp, đặt vào đầu danh sách. Lặp lại cho đến hết.',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
@@ -68,7 +69,7 @@ def seed():
 
         interchange = AlgorithmRepository.create({
             'name': 'Interchange Sort',
-            'code': 'void interchange_sort(int arr[], int n) {\n\tfor (int i = 0; i < n-1; i++) {\n\t\tfor (int j = i+1; j < n; j++) {\n\t\t\tif (arr[i] > arr[j]) {\n\t\t\t\tswap(arr[i], arr[j]);\n\t\t\t}\n\t\t}\n\t}\n}',
+            'code': 'void InterchangeSort(int a[], int N) {\n\tint i,j;\n\tfor(i=0; i<N-1; i++)\n\t\tfor(j=i+1; j<N; j++)\n\t\t\tif(a[i]>a[j])\n\t\t\t\tswap(a[i],a[j]);\n}',
             'description': 'So sánh từng cặp phần tử theo thứ tự và hoán đổi ngay nếu chúng không đúng vị trí.',
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
