@@ -12,11 +12,12 @@ from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from werkzeug.security import generate_password_hash
-
+from app.config.cache import cache
 def seed():
     app = Flask(__name__)
     app.config.from_object(Config)
     db.init_app(app)
+    cache.init_app(app)
     CORS(app)
 
     with app.app_context():

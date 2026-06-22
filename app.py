@@ -15,7 +15,7 @@ from app.models.user import User
 from app.config.cache import cache
 app = Flask(__name__)
 app.config.from_object(Config)
-
+cache.init_app(app)
 app.config['SWAGGER'] = {
     'swagger': '2.0',
     'title': 'Backend Sort API',
@@ -33,7 +33,7 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app)
 
 db.init_app(app)
-cache.init_app(app)
+
 CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')
@@ -45,6 +45,7 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 @app.route('/')
 def home():
     return jsonify({"message": "Backend Sort API is running"})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

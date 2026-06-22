@@ -1,16 +1,19 @@
 from app.database.db import db
 from app.models.user import User
-
+from app.config.cache import cache
 class UserRepository:
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_all():
         return User.query.all()
 
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_by_id(user_id):
         return User.query.get(user_id)
 
     @staticmethod
+    @cache.memoize(timeout=300)
     def get_by_username(username):
         return User.query.filter_by(username=username).first()
 
@@ -31,6 +34,9 @@ class UserRepository:
         )
         db.session.add(user)
         db.session.commit()
+        cache.delete_memoized(UserRepository.get_all)
+        cache.delete_memoized(UserRepository.get_by_id, user.id)
+        cache.delete_memoized(UserRepository.get_by_username, user.username)
         return user
 
     @staticmethod
@@ -45,6 +51,9 @@ class UserRepository:
             if 'status' in data:
                 user.status = data['status']
             db.session.commit()
+            cache.delete_memoized(UserRepository.get_all)
+            cache.delete_memoized(UserRepository.get_by_id, user.id)
+            cache.delete_memoized(UserRepository.get_by_username, user.username)
         return user
 
     @staticmethod
@@ -53,5 +62,8 @@ class UserRepository:
         if user:
             user.status = 0
             db.session.commit()
+            cache.delete_memoized(UserRepository.get_all)
+            cache.delete_memoized(UserRepository.get_by_id, user.id)
+            cache.delete_memoized(UserRepository.get_by_username, user.username)
             return True
         return False

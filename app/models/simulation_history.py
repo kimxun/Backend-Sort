@@ -4,7 +4,7 @@ class SimulationHistory(db.Model):
     __tablename__ = 'lichsumophong'
 
     id = db.Column('idLichSu', db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column('idTaiKhoan', db.Integer, db.ForeignKey('taikhoan.idTaiKhoan'))
+    user_id = db.Column('idTaiKhoan', db.Integer, db.ForeignKey('TaiKhoan.idTaiKhoan'))
     algorithm_id = db.Column('idThuatToan', db.Integer, db.ForeignKey('thuattoan.idThuatToan'))
     input_data = db.Column('duLieuDauVao', db.String(255))
     sorted_result = db.Column('ketQuaSapXep', db.String(255))
