@@ -51,15 +51,16 @@ def seed():
 
         quick = AlgorithmRepository.create({
             'name': 'Quick Sort',
-            'code': 'int partition(int arr[], int low, int high) {\n\tint pivot = arr[high];\n\tint i = low - 1;\n\tfor (int j = low; j < high; j++) {\n\t\tif (arr[j] <= pivot) {\n\t\t\ti++;\n\t\t\tswap(arr[i], arr[j]);\n\t\t}\n\t}\n\tswap(arr[i+1], arr[high]);\n\treturn i+1;\n}\n\nvoid quick_sort(int arr[], int low, int high) {\n\tif (low < high) {\n\t\tint pi = partition(arr, low, high);\n\t\tquick_sort(arr, low, pi-1);\n\t\tquick_sort(arr, pi+1, high);\n\t}\n}',
+            'code': 'void QuickSort(int a[], int l, int r) {\n\tint i, j, x;\n\tx = a[(l+r)/2];\n\ti = l; j = r;\n\tdo {\n\t\twhile (a[i]<x) i++;\n\t\twhile (a[j]>x) j--;\n\t\tif (i<=j) {\n\t\t\tswap(a[i],a[j]);\n\t\t\ti++;\n\t\t\tj--;\n\t\t}\n\t} while (i<=j);\n\tif (l<j) QuickSort(a,l,j);\n\tif (i<r) QuickSort(a,i,r);\n}',
             'description': 'Chọn một phần tử làm mốc, sau đó chia mảng thành hai phần: phần tử nhỏ hơn mốc và phần tử lớn hơn mốc. Lặp lại quy trình cho từng phần.',
             'time_complexity': 'O(n log n)',
             'space_complexity': 'O(log n)',
             'steps': json.dumps([
-            'Chọn pivot = a[right]',
-            'Phân vùng: đưa phần tử ≤ pivot sang trái',
-            'Đặt pivot vào đúng vị trí',
-            'Đệ quy với 2 nửa'
+            'Chọn mốc x = a[(l+r)/2], đặt i = l, j = r',
+            'Tìm a[i] ≥ x và a[j] ≤ x nằm sai vị trí',
+            'Nếu i ≤ j → Hoán vị a[i] ↔ a[j], tăng i, giảm j',
+            'Lặp lại kiểm tra cho đến khi i > j',
+            'Đệ quy với dãy con bên trái l đến j và bên phải i đến r'
         ]),
             'category_id': cat_sort.id,
             'slug': 'quick-sort',
