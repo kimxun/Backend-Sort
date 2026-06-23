@@ -5,11 +5,12 @@ from app.repositories.algorithm_repository import AlgorithmRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from app.models.algorithm import Algorithm
 from app.config.cache import cache
-def sort_array_with_metrics(arr, algorithm):
+
 
 def sort_array_with_metrics(arr, algorithm, sort_order="asc"):
     if not isinstance(arr, list):
         raise ValueError("Input must be a list")
+
     if algorithm == 'interchange_sort':
         sorted_arr, steps, comparisons, swaps, _ = interchange_sort(arr, sort_order)
         return sorted_arr, steps, comparisons, swaps
@@ -20,7 +21,9 @@ def sort_array_with_metrics(arr, algorithm, sort_order="asc"):
         sorted_arr, steps, comparisons, swaps, _ = selection_sort(arr, sort_order)
         return sorted_arr, steps, comparisons, swaps
     else:
-        raise ValueError(f"Unsupported algorithm: {algorithm}. Only support: interchange_sort, quick_sort, selection_sort")
+        raise ValueError(
+            f"Unsupported algorithm: {algorithm}. Only support: interchange_sort, quick_sort, selection_sort")
+
 
 class SortService:
     @staticmethod
