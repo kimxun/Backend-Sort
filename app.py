@@ -13,9 +13,11 @@ from app.models.algorithm_category import AlgorithmCategory
 from app.models.simulation_history import SimulationHistory
 from app.models.user import User
 from app.config.cache import cache
+
 app = Flask(__name__)
 app.config.from_object(Config)
 cache.init_app(app)
+
 app.config['SWAGGER'] = {
     'swagger': '2.0',
     'title': 'Backend Sort API',
@@ -28,7 +30,7 @@ app.config['SWAGGER'] = {
             'in': 'header'
         }
     },
-    'security': [{'BearerAuth': []}]         # <-- thêm dòng này
+    'security': [{'BearerAuth': []}]
 }
 swagger = Swagger(app)
 
@@ -46,6 +48,8 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 def home():
     return jsonify({"message": "Backend Sort API is running"})
 
-
 if __name__ == '__main__':
+    print("\n==================================================")
+    print("🚀 Swagger UI is available at: http://127.0.0.1:5000/apidocs/")
+    print("==================================================\n")
     app.run(debug=True)

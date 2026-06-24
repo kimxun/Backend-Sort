@@ -1,5 +1,7 @@
 Đăng ký người dùng mới
 ---
+tags:
+  - Authenticate
 parameters:
   - name: body
     in: body
