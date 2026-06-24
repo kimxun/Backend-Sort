@@ -30,13 +30,13 @@ app.config['SWAGGER'] = {
             'in': 'header'
         }
     },
-    'security': [{'BearerAuth': []}]
+    'security': [{'BearerAuth': []}]         # <-- thêm dòng này
 }
 swagger = Swagger(app)
 
 db.init_app(app)
 
-CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept","Guest-ID"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')
 app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -48,8 +48,7 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 def home():
     return jsonify({"message": "Backend Sort API is running"})
 
+
 if __name__ == '__main__':
-    print("\n==================================================")
-    print("🚀 Swagger UI is available at: http://127.0.0.1:5000/apidocs/")
-    print("==================================================\n")
+    print("Swagger: http://127.0.0.1:5000/apidocs/")
     app.run(debug=True)
