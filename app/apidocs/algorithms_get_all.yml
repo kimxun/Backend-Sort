@@ -1,5 +1,7 @@
 Lấy danh sách tất cả các thuật toán
 ---
+tags:
+  - Algorithms
 parameters:
   - name: page
     in: query

@@ -13,9 +13,11 @@ from app.models.algorithm_category import AlgorithmCategory
 from app.models.simulation_history import SimulationHistory
 from app.models.user import User
 from app.config.cache import cache
+
 app = Flask(__name__)
 app.config.from_object(Config)
 cache.init_app(app)
+
 app.config['SWAGGER'] = {
     'swagger': '2.0',
     'title': 'Backend Sort API',
