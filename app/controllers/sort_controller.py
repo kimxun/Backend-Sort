@@ -3,8 +3,8 @@ import time
 import json
 from flasgger import swag_from
 from app.services.sort_service import sort_array_with_metrics, SortService
-from app.utils.auth_decorator import jwt_required
-
+from app.utils.auth_decorator import jwt_required,optional_jwt_required
+from app.config.cache import cache
 sort_bp = Blueprint('sort', __name__)
 
 ALGO_SLUG_MAP = {
@@ -42,9 +42,32 @@ def _build_response(original_array, sorted_array, algorithm_name, steps, compari
     return jsonify(response), 200
 
 @sort_bp.route('', methods=['POST'])
-@jwt_required
+@optional_jwt_required
 @swag_from('../apidocs/sort_post.yml')
 def handle_sort():
+    print("👉 DATA TỪ FRONTEND GỬI LÊN:", request.get_json())
+    current_user = getattr(g, "current_user", None)
+    
+    # 1. KIỂM TRA LIMIT CỦA GUEST (Chỉ chạy khi không có token)
+    if not current_user:
+        guest_id = request.headers.get('Guest-ID')
+        if not guest_id:
+            return jsonify({"error": "Missing Guest-ID header"}), 400
+        
+        cache_key = f"free_sort:{guest_id}"
+        count = cache.get(cache_key) or 0
+        
+        # Phải nằm trong khối if not current_user
+        if count >= 3:
+            return jsonify({
+                "error": "Free limit exceeded", 
+                "message": "Bạn đã sử dụng hết 3 lượt miễn phí. Vui lòng đăng nhập."
+            }), 401
+            
+        # Tăng biến đếm và set timeout
+        cache.set(cache_key, count + 1, timeout=86400)  # 24 giờ
+        
+    # 2. XỬ LÝ DỮ LIỆU ĐẦU VÀO
     data = request.get_json()
     if not data:
         return jsonify({"error": "Missing JSON body"}), 400
@@ -55,34 +78,45 @@ def handle_sort():
 
     original_array = data['array']
     algorithm_name = data['algorithm']
-    user_id = g.current_user['id']
+    algorithm_name = algorithm_name.lower().replace(' ', '_')
+    
+    # Lấy ID an toàn (Guest sẽ có user_id = None)
+    user_id = current_user['id'] if current_user else None
 
     if algorithm_name not in ALGO_SLUG_MAP:
         return jsonify({"error": f"Unsupported algorithm. Supported: {list(ALGO_SLUG_MAP.keys())}"}), 400
 
+    # 3. CHẠY THUẬT TOÁN VÀ LƯU DB
     try:
         sorted_array, steps, comparisons, swaps, exec_time = _measure_sorting(original_array, algorithm_name)
         slug = _get_algorithm_slug(algorithm_name)
         algorithm_obj = SortService.get_algorithm_by_slug(slug)
 
-        if not algorithm_obj:
-            return _build_response(original_array, sorted_array, algorithm_name,
-                                   steps, comparisons, swaps, exec_time,
-                                   warning="Algorithm not found in database, history not saved")
+        simulation_id = None
+        warning_msg = None
 
-        history = SortService.save_simulation(
-            user_id=user_id,
-            algorithm_id=algorithm_obj.id,
-            input_data=json.dumps(original_array),
-            sorted_result=json.dumps(sorted_array),
-            steps=steps,
-            comparisons=comparisons,
-            swaps=swaps,
-            execution_time_ms=exec_time
-        )
+        if not algorithm_obj:
+            warning_msg = "Algorithm not found in database, history not saved"
+            
+        elif current_user:  # <--- CHỈ LƯU VÀO DB NẾU LÀ USER ĐÃ ĐĂNG NHẬP
+            history = SortService.save_simulation(
+                user_id=user_id,
+                algorithm_id=algorithm_obj.id,
+                input_data=json.dumps(original_array),
+                sorted_result=json.dumps(sorted_array),
+                steps=steps,
+                comparisons=comparisons,
+                swaps=swaps,
+                execution_time_ms=exec_time
+            )
+            simulation_id = history.id if history else None
+        else:
+            warning_msg = "Guest user: simulation history not saved."
+
         return _build_response(original_array, sorted_array, algorithm_name,
                                steps, comparisons, swaps, exec_time,
-                               simulation_id=history.id if history else None)
+                               simulation_id=simulation_id, 
+                               warning=warning_msg)
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
