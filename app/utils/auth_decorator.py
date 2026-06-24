@@ -73,3 +73,34 @@ def roles_required(*roles):
     
 
     return decorator
+
+def optional_jwt_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        auth_header = request.headers.get("Authorization")
+
+        # Mặc định chưa đăng nhập
+        g.current_user = None
+
+        if auth_header:
+            try:
+                parts = auth_header.split()
+
+                if len(parts) == 2 and parts[0] == "Bearer":
+                    token = parts[1]
+
+                    payload = jwt.decode(
+                        token,
+                        current_app.config["SECRET_KEY"],
+                        algorithms=["HS256"]
+                    )
+
+                    g.current_user = payload
+
+            except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                pass
+
+        return f(*args, **kwargs)
+
+    return decorated
