@@ -13,9 +13,10 @@ from app.models.algorithm_category import AlgorithmCategory
 from app.models.simulation_history import SimulationHistory
 from app.models.user import User
 from app.config.cache import cache
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 app.config.from_object(Config)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 cache.init_app(app)
 
 app.config['SWAGGER'] = {
@@ -36,7 +37,7 @@ swagger = Swagger(app)
 
 db.init_app(app)
 
-CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept","Guest-ID"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')
 app.register_blueprint(user_bp, url_prefix='/api/users')

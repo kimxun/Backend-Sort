@@ -1,10 +1,12 @@
 from flask import request, jsonify, Blueprint, g
 import time
 import json
+import hashlib # THÊM THƯ VIỆN NÀY ĐỂ BĂM MÃ hóa MD5
 from flasgger import swag_from
 from app.services.sort_service import sort_array_with_metrics, SortService
-from app.utils.auth_decorator import jwt_required,optional_jwt_required
+from app.utils.auth_decorator import jwt_required, optional_jwt_required
 from app.config.cache import cache
+
 sort_bp = Blueprint('sort', __name__)
 
 ALGO_SLUG_MAP = {
@@ -45,29 +47,32 @@ def _build_response(original_array, sorted_array, algorithm_name, steps, compari
 @optional_jwt_required
 @swag_from('../apidocs/sort_post.yml')
 def handle_sort():
-    print("👉 DATA TỪ FRONTEND GỬI LÊN:", request.get_json())
     current_user = getattr(g, "current_user", None)
     
-    # 1. KIỂM TRA LIMIT CỦA GUEST (Chỉ chạy khi không có token)
     if not current_user:
-        guest_id = request.headers.get('Guest-ID')
-        if not guest_id:
-            return jsonify({"error": "Missing Guest-ID header"}), 400
+        user_ip = request.remote_addr # Lấy IP người dùng gửi lên
+        user_agent = request.headers.get('User-Agent', '') # Lấy thông tin chi tiết về trình duyệt/thiết bị
         
-        cache_key = f"free_sort:{guest_id}"
+        # Tạo chuỗi định danh kết hợp:
+        raw_identifier = f"{user_ip}_{user_agent}"
+        
+        # Băm chuỗi trên thành 1 mã MD5 duy nhất
+        device_id = hashlib.md5(raw_identifier.encode()).hexdigest()
+        
+        # Sử dụng device_id tự động này làm key định danh trong Redis cache
+        cache_key = f"free_sort:{device_id}"
         count = cache.get(cache_key) or 0
         
-        # Phải nằm trong khối if not current_user
         if count >= 3:
             return jsonify({
                 "error": "Free limit exceeded", 
-                "message": "Bạn đã sử dụng hết 3 lượt miễn phí. Vui lòng đăng nhập."
+                "message": "Bạn đã sử dụng hết 3 lượt miễn phí. Vui lòng đăng nhập. Hoặc đợi 24h để sử dụng tiếp."
             }), 401
             
         # Tăng biến đếm và set timeout
-        cache.set(cache_key, count + 1, timeout=86400)  # 24 giờ
+        cache.set(cache_key, count + 1, timeout=600)  # 24 giờ
         
-    # 2. XỬ LÝ DỮ LIỆU ĐẦU VÀO
+
     data = request.get_json()
     if not data:
         return jsonify({"error": "Missing JSON body"}), 400
@@ -80,13 +85,12 @@ def handle_sort():
     algorithm_name = data['algorithm']
     algorithm_name = algorithm_name.lower().replace(' ', '_')
     
-    # Lấy ID an toàn (Guest sẽ có user_id = None)
     user_id = current_user['id'] if current_user else None
 
     if algorithm_name not in ALGO_SLUG_MAP:
         return jsonify({"error": f"Unsupported algorithm. Supported: {list(ALGO_SLUG_MAP.keys())}"}), 400
 
-    # 3. CHẠY THUẬT TOÁN VÀ LƯU DB
+   
     try:
         sorted_array, steps, comparisons, swaps, exec_time = _measure_sorting(original_array, algorithm_name)
         slug = _get_algorithm_slug(algorithm_name)
@@ -98,7 +102,7 @@ def handle_sort():
         if not algorithm_obj:
             warning_msg = "Algorithm not found in database, history not saved"
             
-        elif current_user:  # <--- CHỈ LƯU VÀO DB NẾU LÀ USER ĐÃ ĐĂNG NHẬP
+        elif current_user:  
             history = SortService.save_simulation(
                 user_id=user_id,
                 algorithm_id=algorithm_obj.id,
