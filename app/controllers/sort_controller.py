@@ -70,7 +70,7 @@ def handle_sort():
             }), 401
             
         # Tăng biến đếm và set timeout
-        cache.set(cache_key, count + 1, timeout=600)  # 24 giờ
+        cache.set(cache_key, count + 1, timeout=86400)  # 24 giờ
         
 
     data = request.get_json()
