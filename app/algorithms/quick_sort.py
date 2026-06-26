@@ -5,6 +5,8 @@ def quick_sort_logic(arr, sort_order="asc"):
     sorted_indices = set()
     comparisons = 0
     swaps = 0
+    left_target = ">= chốt" if sort_order == "asc" else "<= chốt"
+    right_target = "<= chốt" if sort_order == "asc" else ">= chốt"
 
     steps_history.append({
         "array": sorted_arr.copy(),
@@ -68,7 +70,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "line": 5,
                     "keys": ["i", "j", "a[i]", "chốt x"],
                     "vals": [i, j, sorted_arr[i], x],
-                    "action": f"Tìm phần tử bên trái >= chốt: Kiểm tra a[{i}] = {sorted_arr[i]}"
+                    "action": f"Tìm phần tử bên trái {left_target}: Kiểm tra a[{i}] = {sorted_arr[i]}"
                 })
                 condition = sorted_arr[i] < x if sort_order == "asc" else sorted_arr[i] > x
                 if condition:
@@ -87,7 +89,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "line": 6,
                     "keys": ["i", "j", "a[j]", "chốt x"],
                     "vals": [i, j, sorted_arr[j], x],
-                    "action": f"Tìm phần tử bên phải <= chốt: Kiểm tra a[{j}] = {sorted_arr[j]}"
+                    "action": f"Tìm phần tử bên phải {right_target}: Kiểm tra a[{j}] = {sorted_arr[j]}"
                 })
                 condition = sorted_arr[j] > x if sort_order == "asc" else sorted_arr[j] < x
                 if condition:
