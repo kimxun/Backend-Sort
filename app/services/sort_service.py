@@ -6,27 +6,24 @@ from app.repositories.simulation_history_repository import SimulationHistoryRepo
 from app.models.algorithm import Algorithm
 from app.config.cache import cache
 
+ALGORITHM_HANDLERS = {
+    'interchange-sort': interchange_sort,
+    'quick-sort': quick_sort,
+    'selection-sort': selection_sort,
+}
+
 
 def sort_array_with_metrics(arr, algorithm, sort_order="asc"):
     if not isinstance(arr, list):
         raise ValueError("Input must be a list")
 
-    # Đổi biến '_' thành 'steps_list' và trả 'steps_list' về cho controller
-    if algorithm == 'interchange_sort':
-        sorted_arr, step_count, comparisons, swaps, steps_list = interchange_sort(arr, sort_order)
-        return sorted_arr, steps_list, comparisons, swaps
-        
-    elif algorithm == 'quick_sort':
-        sorted_arr, step_count, comparisons, swaps, steps_list = quick_sort(arr, sort_order)
-        return sorted_arr, steps_list, comparisons, swaps
-        
-    elif algorithm == 'selection_sort':
-        sorted_arr, step_count, comparisons, swaps, steps_list = selection_sort(arr, sort_order)
-        return sorted_arr, steps_list, comparisons, swaps
-        
-    else:
-        raise ValueError(
-            f"Unsupported algorithm: {algorithm}. Only support: interchange_sort, quick_sort, selection_sort")
+    algorithm_slug = str(algorithm).strip().lower().replace('_', '-')
+    handler = ALGORITHM_HANDLERS.get(algorithm_slug)
+    if not handler:
+        raise ValueError(f"Algorithm '{algorithm_slug}' is not implemented on the server")
+
+    sorted_arr, step_count, comparisons, swaps, steps_list = handler(arr, sort_order)
+    return sorted_arr, steps_list, comparisons, swaps
 
 
 class SortService:
@@ -66,6 +63,31 @@ class SortService:
     @staticmethod
     def get_algorithm_by_slug(slug):
         return AlgorithmRepository.get_by_slug(slug)
+
+    @staticmethod
+    def resolve_algorithm(identifier=None, algorithm_id=None):
+        if algorithm_id is not None:
+            try:
+                algorithm_id = int(algorithm_id)
+            except (TypeError, ValueError):
+                return None
+            return AlgorithmRepository.get_by_id(algorithm_id)
+
+        if not identifier:
+            return None
+
+        normalized = str(identifier).strip()
+        slug = normalized.lower().replace(' ', '-').replace('_', '-')
+        algorithm = AlgorithmRepository.get_by_slug(slug)
+        if algorithm:
+            return algorithm
+
+        return Algorithm.query.filter(Algorithm.name.ilike(normalized)).first()
+
+    @staticmethod
+    def is_algorithm_implemented(slug):
+        normalized_slug = str(slug).strip().lower().replace('_', '-')
+        return normalized_slug in ALGORITHM_HANDLERS
 
     @staticmethod
     def create_algorithm(data):
