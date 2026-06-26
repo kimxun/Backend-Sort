@@ -9,18 +9,9 @@ from app.config.cache import cache
 
 sort_bp = Blueprint('sort', __name__)
 
-ALGO_SLUG_MAP = {
-    'interchange_sort': 'interchange-sort',
-    'quick_sort': 'quick-sort',
-    'selection_sort': 'selection-sort'
-}
-
-def _get_algorithm_slug(algorithm_name):
-    return ALGO_SLUG_MAP.get(algorithm_name)
-
-def _measure_sorting(original_array, algorithm_name):
+def _measure_sorting(original_array, algorithm_slug, sort_order="asc"):
     start_time = time.time()
-    sorted_array, steps, comparisons, swaps = sort_array_with_metrics(original_array, algorithm_name)
+    sorted_array, steps, comparisons, swaps = sort_array_with_metrics(original_array, algorithm_slug, sort_order)
     end_time = time.time()
     execution_time_ms = int((end_time - start_time) * 1000)
     return sorted_array, steps, comparisons, swaps, execution_time_ms
@@ -76,33 +67,35 @@ def handle_sort():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Missing JSON body"}), 400
-    if 'array' not in data or 'algorithm' not in data:
-        return jsonify({"error": "Missing 'array' or 'algorithm' field"}), 400
+    if 'array' not in data or ('algorithm' not in data and 'algorithm_id' not in data):
+        return jsonify({"error": "Missing 'array' and algorithm identifier"}), 400
     if not isinstance(data['array'], list):
         return jsonify({"error": "'array' must be a list"}), 400
 
     original_array = data['array']
-    algorithm_name = data['algorithm']
-    algorithm_name = algorithm_name.lower().replace(' ', '_')
+    algorithm_identifier = data.get('algorithm')
+    algorithm_id = data.get('algorithm_id')
+    sort_order = data.get('sortOrder', 'asc')
+    if sort_order not in ('asc', 'desc'):
+        return jsonify({"error": "sortOrder must be 'asc' or 'desc'"}), 400
     
     user_id = current_user['id'] if current_user else None
 
-    if algorithm_name not in ALGO_SLUG_MAP:
-        return jsonify({"error": f"Unsupported algorithm. Supported: {list(ALGO_SLUG_MAP.keys())}"}), 400
+    algorithm_obj = SortService.resolve_algorithm(algorithm_identifier, algorithm_id)
+    if not algorithm_obj or algorithm_obj.status != 1:
+        return jsonify({"error": "Algorithm not found or inactive"}), 404
+
+    if not SortService.is_algorithm_implemented(algorithm_obj.slug):
+        return jsonify({"error": f"Algorithm '{algorithm_obj.slug}' is not implemented on the server"}), 400
 
    
     try:
-        sorted_array, steps, comparisons, swaps, exec_time = _measure_sorting(original_array, algorithm_name)
-        slug = _get_algorithm_slug(algorithm_name)
-        algorithm_obj = SortService.get_algorithm_by_slug(slug)
+        sorted_array, steps, comparisons, swaps, exec_time = _measure_sorting(original_array, algorithm_obj.slug, sort_order)
 
         simulation_id = None
         warning_msg = None
 
-        if not algorithm_obj:
-            warning_msg = "Algorithm not found in database, history not saved"
-            
-        elif current_user:  
+        if current_user:
             history = SortService.save_simulation(
                 user_id=user_id,
                 algorithm_id=algorithm_obj.id,
@@ -117,7 +110,7 @@ def handle_sort():
         else:
             warning_msg = "Guest user: simulation history not saved."
 
-        return _build_response(original_array, sorted_array, algorithm_name,
+        return _build_response(original_array, sorted_array, algorithm_obj.slug,
                                steps, comparisons, swaps, exec_time,
                                simulation_id=simulation_id, 
                                warning=warning_msg)

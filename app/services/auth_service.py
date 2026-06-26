@@ -17,6 +17,8 @@ class AuthService:
         if not check_password_hash(user.password, password):
             raise Exception("Sai mật khẩu")
 
+        if user.status==0:
+            raise Exception("Tài khoản đã xóa hoặc vô hiệu")
         token = JwtHelper.generate_token(user)
 
         return {
