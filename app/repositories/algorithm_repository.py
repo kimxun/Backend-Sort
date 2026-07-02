@@ -1,5 +1,6 @@
 from app.database.db import db
 from app.models.algorithm import Algorithm
+from app.models.simulation_history import SimulationHistory
 from app.config.cache import cache
 
 class AlgorithmRepository:
@@ -65,13 +66,29 @@ class AlgorithmRepository:
         return algorithm
 
     @staticmethod
-    def delete(algorithm_id):
+    def delete(algorithm_id, permanent=False):
         algorithm = Algorithm.query.get(algorithm_id)
-        if algorithm:
+        if not algorithm:
+            return False
+        if permanent:
+            SimulationHistory.query.filter_by(algorithm_id=algorithm_id).delete()
+            db.session.delete(algorithm)
+        else:
             algorithm.status = -1
+        db.session.commit()
+        cache.delete_memoized(AlgorithmRepository.get_all)
+        cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm_id)
+        cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
+        return True
+
+    @staticmethod
+    def restore(algorithm_id):
+        algorithm = Algorithm.query.get(algorithm_id)
+        if algorithm and algorithm.status == -1:
+            algorithm.status = 1
             db.session.commit()
             cache.delete_memoized(AlgorithmRepository.get_all)
-            cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm.id)
+            cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm_id)
             cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
             return True
         return False

@@ -96,7 +96,6 @@ class SortService:
     @staticmethod
     def save_simulation(user_id, algorithm_id, input_data, sorted_result,
                         steps, comparisons, swaps, execution_time_ms):
-        # Đảm bảo nếu truyền vào một list các bước, DB vẫn lưu số lượng bước (int)
         final_step_count = len(steps) if isinstance(steps, list) else steps
 
         data = {
@@ -104,7 +103,7 @@ class SortService:
             'algorithm_id': algorithm_id,
             'input_data': input_data,
             'sorted_result': sorted_result,
-            'steps': final_step_count, # Lưu con số vào Database để tránh lỗi cấu trúc bảng
+            'steps': final_step_count,
             'comparisons': comparisons,
             'swaps': swaps,
             'execution_time_ms': execution_time_ms
@@ -120,5 +119,5 @@ class SortService:
         return AlgorithmRepository.update(algorithm_id, data)
 
     @staticmethod
-    def delete_algorithm(algorithm_id):
-        return AlgorithmRepository.delete(algorithm_id)
+    def delete_algorithm(algorithm_id, permanent=False):
+        return AlgorithmRepository.delete(algorithm_id, permanent=permanent)

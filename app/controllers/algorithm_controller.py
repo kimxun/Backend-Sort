@@ -161,7 +161,9 @@ def update_algorithm(algorithm_id):
 @roles_required(1)
 def delete_algorithm(algorithm_id):
     try:
-        success = SortService.delete_algorithm(algorithm_id)
+        data = request.get_json(silent=True) or {}
+        permanent = data.get('permanent', False)
+        success = SortService.delete_algorithm(algorithm_id, permanent=permanent)
         if not success:
             return jsonify({"error": "Algorithm not found"}), 404
         return jsonify({"message": "Algorithm deleted"}), 200
