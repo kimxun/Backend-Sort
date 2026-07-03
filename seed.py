@@ -13,7 +13,10 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
 from werkzeug.security import generate_password_hash
 from app.config.cache import cache
-
+from app.models.algorithm import Algorithm
+from app.models.algorithm_category import AlgorithmCategory
+from app.models.simulation_history import SimulationHistory
+from app.models.user import User
 def seed():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -22,13 +25,15 @@ def seed():
     CORS(app)
 
     with app.app_context():
-        # Reset database (xóa và tạo lại)
         db.drop_all()
         db.create_all()
         print("🌱 Seeding data...")
 
         cat_sort = AlgorithmCategoryRepository.create("Sorting")
         print("Created category: Sorting")
+
+        cat_search = AlgorithmCategoryRepository.create("Searching")
+        print("Created category: Searching")
 
         selection = AlgorithmRepository.create({
             'name': 'Selection Sort',
@@ -85,6 +90,46 @@ def seed():
             'status': 1
         })
         print("Created algorithm: Interchange Sort")
+
+        linear = AlgorithmRepository.create({
+            'name': 'Linear Search',
+            'code': 'int LinearSearch(int arr[], int N, int x) {\n\tfor (int i = 0; i < N; i++)\n\t\tif (arr[i] == x)\n\t\t\treturn i;\n\treturn -1;\n}',
+            'description': 'Duyệt tuần tự từng phần tử cho đến khi tìm thấy giá trị cần tìm hoặc hết mảng.',
+            'time_complexity': 'O(n)',
+            'space_complexity': 'O(1)',
+            'steps': json.dumps([
+            'Bắt đầu từ i = 0',
+            'So sánh arr[i] với giá trị cần tìm',
+            'Nếu bằng → trả về i (tìm thấy)',
+            'Nếu không → tăng i lên 1 và lặp lại',
+            'Nếu i >= N mà chưa tìm thấy → trả về -1'
+        ]),
+            'category_id': cat_search.id,
+            'slug': 'linear-search',
+            'status': 1
+        })
+        print("Created algorithm: Linear Search")
+
+        binary = AlgorithmRepository.create({
+            'name': 'Binary Search',
+            'code': 'int BinarySearch(int arr[], int l, int r, int x) {\n\twhile (l <= r) {\n\t\tint m = l + (r - l) / 2;\n\t\tif (arr[m] == x)\n\t\t\treturn m;\n\t\tif (arr[m] < x)\n\t\t\tl = m + 1;\n\t\telse\n\t\t\tr = m - 1;\n\t}\n\treturn -1;\n}',
+            'description': 'Tìm kiếm trên mảng đã sắp xếp bằng cách liên tục chia đôi khoảng tìm kiếm.',
+            'time_complexity': 'O(log n)',
+            'space_complexity': 'O(1)',
+            'steps': json.dumps([
+            'Đặt left = 0, right = N-1',
+            'Tính mid = (left + right) / 2',
+            'So sánh arr[mid] với x',
+            'Nếu bằng → trả về mid',
+            'Nếu arr[mid] < x → left = mid + 1',
+            'Nếu arr[mid] > x → right = mid - 1',
+            'Lặp lại cho đến khi tìm thấy hoặc left > right'
+        ]),
+            'category_id': cat_search.id,
+            'slug': 'binary-search',
+            'status': 1
+        })
+        print("Created algorithm: Binary Search")
 
         admin = UserRepository.create({
             'username': 'admin',
