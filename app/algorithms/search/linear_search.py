@@ -1,35 +1,65 @@
 def linear_search_logic(arr, target):
     steps = []
     comparisons = 0
-    found_index = -1
 
-    for i, val in enumerate(arr):
+    steps.append({
+        "array": arr.copy(),
+        "current_index": -1,
+        "comparing": [],
+        "found": False,
+        "line": 2,
+        "action": (
+            f"Bắt đầu tìm {target}. Kiểm tra lần lượt từng phần tử "
+            f"từ đầu đến cuối mảng"
+        )
+    })
+
+    i = 0
+
+    while i < len(arr) and arr[i] != target:
         comparisons += 1
-        steps.append({
-            'array': arr,
-            'current_index': i,
-            'comparing': [i],
-            'found': False,
-            'message': f'So sánh arr[{i}] = {val} với {target}'
-        })
-        if val == target:
-            found_index = i
-            steps.append({
-                'array': arr,
-                'current_index': i,
-                'comparing': [],
-                'found': True,
-                'message': f'Tìm thấy {target} tại vị trí {i}'
-            })
-            break
 
-    if found_index == -1:
         steps.append({
-            'array': arr,
-            'current_index': -1,
-            'comparing': [],
-            'found': False,
-            'message': f'Không tìm thấy {target} trong mảng'
+            "array": arr.copy(),
+            "current_index": i,
+            "comparing": [i],
+            "found": False,
+            "line": 3,
+            "action": (
+                f"Kiểm tra vị trí {i}: giá trị {arr[i]} không bằng {target}, "
+                f"tiếp tục sang vị trí {i + 1}"
+            )
         })
 
-    return steps, comparisons, found_index
+        i += 1
+
+    if i < len(arr):
+        comparisons += 1
+
+        steps.append({
+            "array": arr.copy(),
+            "current_index": i,
+            "comparing": [i],
+            "found": True,
+            "line": 7,
+            "action": (
+                f"Kiểm tra vị trí {i}: giá trị {arr[i]} bằng {target}. "
+                f"Đã tìm thấy tại vị trí {i}"
+            )
+        })
+
+        return steps, comparisons, i
+
+    steps.append({
+        "array": arr.copy(),
+        "current_index": -1,
+        "comparing": [],
+        "found": False,
+        "line": 6,
+        "action": (
+            f"Không có phần tử nào trong mảng bằng {target}. "
+         
+        )
+    })
+
+    return steps, comparisons, -1
