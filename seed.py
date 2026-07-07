@@ -93,7 +93,7 @@ def seed():
 
         linear = AlgorithmRepository.create({
             'name': 'Linear Search',
-            'code': 'int LinearSearch(int arr[], int N, int x) {\n\tfor (int i = 0; i < N; i++)\n\t\tif (arr[i] == x)\n\t\t\treturn i;\n\treturn -1;\n}',
+            'code': 'int LinearSearch1(int a[], int N, int x) {\n\tint i = 0;\n\twhile ((i < N) && (a[i] != x))\n\t\ti++;\n\tif (i == N)\n\t\treturn -1;\n\treturn i;\n}',
             'description': 'Duyệt tuần tự từng phần tử cho đến khi tìm thấy giá trị cần tìm hoặc hết mảng.',
             'time_complexity': 'O(n)',
             'space_complexity': 'O(1)',
@@ -112,7 +112,7 @@ def seed():
 
         binary = AlgorithmRepository.create({
             'name': 'Binary Search',
-            'code': 'int BinarySearch(int arr[], int l, int r, int x) {\n\twhile (l <= r) {\n\t\tint m = l + (r - l) / 2;\n\t\tif (arr[m] == x)\n\t\t\treturn m;\n\t\tif (arr[m] < x)\n\t\t\tl = m + 1;\n\t\telse\n\t\t\tr = m - 1;\n\t}\n\treturn -1;\n}',
+            'code': 'int BinarySearch(int a[], int N, int x) {\n\tint left = 0, right = N - 1, mid;\n\tdo {\n\t\tmid = (left + right) / 2;\n\t\tif (x == a[mid])\n\t\t\treturn mid;\n\t\telse if (x < a[mid])\n\t\t\tright = mid - 1;\n\t\telse\n\t\t\tleft = mid + 1;\n\t} while (left <= right);\n\treturn -1;\n}',
             'description': 'Tìm kiếm trên mảng đã sắp xếp bằng cách liên tục chia đôi khoảng tìm kiếm.',
             'time_complexity': 'O(log n)',
             'space_complexity': 'O(1)',
