@@ -10,6 +10,7 @@ ALGORITHM_HANDLERS = {
     'interchange-sort': interchange_sort,
     'quick-sort': quick_sort,
     'selection-sort': selection_sort,
+    
 }
 
 
@@ -39,9 +40,7 @@ class SortService:
             offset = (page - 1) * limit
 
             query = Algorithm.query
-            if is_admin:
-                query = query.filter(Algorithm.status != -1)
-            else:
+            if not is_admin:
                 query = query.filter_by(status=1)
 
             total = query.count()
@@ -96,6 +95,7 @@ class SortService:
     @staticmethod
     def save_simulation(user_id, algorithm_id, input_data, sorted_result,
                         steps, comparisons, swaps, execution_time_ms):
+        # Đảm bảo nếu truyền vào một list các bước, DB vẫn lưu số lượng bước (int)
         final_step_count = len(steps) if isinstance(steps, list) else steps
 
         data = {
@@ -103,7 +103,7 @@ class SortService:
             'algorithm_id': algorithm_id,
             'input_data': input_data,
             'sorted_result': sorted_result,
-            'steps': final_step_count,
+            'steps': final_step_count, # Lưu con số vào Database để tránh lỗi cấu trúc bảng
             'comparisons': comparisons,
             'swaps': swaps,
             'execution_time_ms': execution_time_ms
@@ -120,4 +120,4 @@ class SortService:
 
     @staticmethod
     def delete_algorithm(algorithm_id, permanent=False):
-        return AlgorithmRepository.delete(algorithm_id, permanent=permanent)
+        return AlgorithmRepository.delete(algorithm_id,permanent=permanent)

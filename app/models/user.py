@@ -12,6 +12,8 @@ class User(db.Model):
     created_at = db.Column('ngayTao', db.DateTime, default=db.func.current_timestamp())
     status= db.Column('trangThai', db.Integer, default=1)  # 1: active, 0: inactive
 
+    simulation_histories = db.relationship('SimulationHistory', backref='user', lazy=True)
+
     def to_dict(self):
         return {
             "id": self.id,

@@ -1,5 +1,6 @@
 from app.database.db import db
 from app.models.user import User
+from app.models.simulation_history import SimulationHistory
 from app.config.cache import cache
 class UserRepository:
     @staticmethod
@@ -57,13 +58,20 @@ class UserRepository:
         return user
 
     @staticmethod
-    def delete(user_id):
+    def delete(user_id, permanent=False):
         user = User.query.get(user_id)
-        if user:
+        if not user:
+            return False
+
+        username = user.username
+        if permanent:
+            SimulationHistory.query.filter_by(user_id=user_id).delete()
+            db.session.delete(user)
+        else:
             user.status = 0
-            db.session.commit()
-            cache.delete_memoized(UserRepository.get_all)
-            cache.delete_memoized(UserRepository.get_by_id, user.id)
-            cache.delete_memoized(UserRepository.get_by_username, user.username)
-            return True
-        return False
+
+        db.session.commit()
+        cache.delete_memoized(UserRepository.get_all)
+        cache.delete_memoized(UserRepository.get_by_id, user_id)
+        cache.delete_memoized(UserRepository.get_by_username, username)
+        return True

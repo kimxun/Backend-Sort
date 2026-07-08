@@ -18,7 +18,10 @@ class SimulationHistory(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
+            "user_name": self.user.full_name if self.user else None,
+            "username": self.user.username if self.user else None,
             "algorithm_id": self.algorithm_id,
+            "algorithm_name": self.algorithm.name if self.algorithm else None,
             "input_data": self.input_data,
             "sorted_result": self.sorted_result,
             "steps": self.steps,

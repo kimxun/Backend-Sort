@@ -4,7 +4,10 @@ from app.models.simulation_history import SimulationHistory
 class SimulationHistoryRepository:
     @staticmethod
     def get_all():
-        return SimulationHistory.query.all()
+        return SimulationHistory.query.order_by(
+            SimulationHistory.executed_at.desc(),
+            SimulationHistory.id.desc()
+        ).all()
 
     @staticmethod
     def get_by_id(history_id):

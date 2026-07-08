@@ -1,8 +1,9 @@
-from flask import jsonify, Blueprint, request, current_app
+from flask import jsonify, Blueprint, request, current_app, g
 from flasgger import swag_from
 import traceback
 import json
 import jwt
+import time
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
 from app.algorithms.interchange_sort import interchange_sort_logic
@@ -130,7 +131,21 @@ def sort_algorithm():
         return jsonify({"error": "Algorithm does not support step-by-step"}), 400
 
     try:
+        start_time = time.perf_counter()
         sorted_arr, steps_count, comparisons, swaps, steps_history = func(input_array, sort_order)
+        execution_time_ms = int((time.perf_counter() - start_time) * 1000)
+
+        SortService.save_simulation(
+            user_id=g.current_user["id"],
+            algorithm_id=algorithm.id,
+            input_data=json.dumps(input_array),
+            sorted_result=json.dumps(sorted_arr),
+            steps=steps_count,
+            comparisons=comparisons,
+            swaps=swaps,
+            execution_time_ms=execution_time_ms
+        )
+
         return jsonify({
             "algorithm": algorithm.slug,
             "algorithm_id": algorithm.id,
@@ -207,10 +222,28 @@ def search_algorithm_steps(algorithm_id):
         return jsonify({"error": "Search algorithm not implemented"}), 400
 
     try:
+        start_time = time.perf_counter()
+
         if algorithm.slug == 'binary-search':
             input_array = sorted(input_array)
 
         steps, comparisons, found_index = func(input_array, target)
+        execution_time_ms = int((time.perf_counter() - start_time) * 1000)
+
+        SortService.save_simulation(
+            user_id=g.current_user["id"],
+            algorithm_id=algorithm.id,
+            input_data=json.dumps(input_array),
+            sorted_result=json.dumps({
+                "target": target,
+                "found_index": found_index
+            }),
+            steps=steps,
+            comparisons=comparisons,
+            swaps=0,
+            execution_time_ms=execution_time_ms
+        )
+
         return jsonify({
             'algorithm_id': algorithm_id,
             'algorithm_name': algorithm.name,
