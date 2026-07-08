@@ -16,6 +16,8 @@ from app.config.cache import cache
 from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 app.config.from_object(Config)
+print(app.config["SMTP_USER"])
+print(app.config["SMTP_PASSWORD"])
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 cache.init_app(app)
 
