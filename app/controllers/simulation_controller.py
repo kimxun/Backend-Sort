@@ -1,12 +1,13 @@
 from flask import request, jsonify, Blueprint
 from flasgger import swag_from
 from app.repositories.simulation_history_repository import SimulationHistoryRepository
-from app.utils.auth_decorator import jwt_required
+from app.utils.auth_decorator import jwt_required, roles_required
 
 sim_bp = Blueprint('simulation', __name__, url_prefix='/simulations')
 
 @sim_bp.route('', methods=['GET'])
 @jwt_required
+@roles_required(1)
 @swag_from('../apidocs/simulation_get_all.yml')
 def get_all_simulations():
     sims = SimulationHistoryRepository.get_all()
@@ -54,6 +55,7 @@ def update_simulation(sim_id):
 
 @sim_bp.route('/<int:sim_id>', methods=['DELETE'])
 @jwt_required
+@roles_required(1)
 @swag_from('../apidocs/simulation_delete.yml')
 def delete_simulation(sim_id):
     success = SimulationHistoryRepository.delete(sim_id)

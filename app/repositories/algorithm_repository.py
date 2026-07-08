@@ -8,7 +8,7 @@ class AlgorithmRepository:
     @cache.memoize(timeout=300)
     def get_all(is_admin=False):
         if is_admin:
-            return Algorithm.query.filter(Algorithm.status != -1).all()
+            return Algorithm.query.all()
         return Algorithm.query.filter_by(status=1).all()
 
     @staticmethod
@@ -74,7 +74,7 @@ class AlgorithmRepository:
             SimulationHistory.query.filter_by(algorithm_id=algorithm_id).delete()
             db.session.delete(algorithm)
         else:
-            algorithm.status = -1
+            algorithm.status = 0
         db.session.commit()
         cache.delete_memoized(AlgorithmRepository.get_all)
         cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm_id)

@@ -59,7 +59,9 @@ def update_user(user_id):
 @roles_required(1)
 @swag_from('../apidocs/user_delete.yml')
 def delete_user(user_id):
-    success = UserRepository.delete(user_id)
+    data = request.get_json(silent=True) or {}
+    permanent = data.get('permanent', False)
+    success = UserRepository.delete(user_id, permanent=permanent)
     if not success:
         return jsonify({"error": "User not found or could not be deleted"}), 404
     return jsonify({"message": "User deleted"}), 200
