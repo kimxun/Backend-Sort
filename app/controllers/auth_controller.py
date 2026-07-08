@@ -44,3 +44,73 @@ def register():
             "success": False,
             "message": str(e)
         }), 500
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json() or {}
+
+    try:
+        result = AuthService.forgot_password(data.get("email"))
+        return jsonify({
+            "success": True,
+            "data": result,
+            "message": result["message"]
+        }), 200
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+@auth_bp.route("/verify-otp", methods=["POST"])
+def verify_otp():
+    data = request.get_json() or {}
+
+    try:
+        result = AuthService.verify_otp(data.get("email"), data.get("otp"))
+        return jsonify({
+            "success": True,
+            "data": result,
+            "message": result["message"]
+        }), 200
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json() or {}
+
+    try:
+        result = AuthService.reset_password(
+            data.get("email"),
+            data.get("newPassword"),
+            data.get("confirmPassword")
+        )
+        return jsonify({
+            "success": True,
+            "data": result,
+            "message": result["message"]
+        }), 200
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
