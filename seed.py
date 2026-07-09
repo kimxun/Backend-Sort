@@ -17,6 +17,7 @@ from app.models.algorithm import Algorithm
 from app.models.algorithm_category import AlgorithmCategory
 from app.models.simulation_history import SimulationHistory
 from app.models.user import User
+
 def seed():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -42,15 +43,17 @@ def seed():
             'time_complexity': 'O(n^2)',
             'space_complexity': 'O(1)',
             'steps': json.dumps([
-            'Đặt i = 0, minIdx = i',
-            'Duyệt j từ i+1 đến cuối',
-            'Nếu a[j] < a[minIdx] → minIdx = j',
-            'Hoán đổi a[i] ↔ a[minIdx]',
-            'Tăng i, lặp lại'
-        ]),
+                'Đặt i = 0, minIdx = i',
+                'Duyệt j từ i+1 đến cuối',
+                'Nếu a[j] < a[minIdx] → minIdx = j',
+                'Hoán đổi a[i] ↔ a[minIdx]',
+                'Tăng i, lặp lại'
+            ]),
             'category_id': cat_sort.id,
             'slug': 'selection-sort',
-            'status': 1
+            'status': 1,
+            'is_custom': False,
+            'code_filename': None
         })
         print("Created algorithm: Selection Sort")
 
@@ -61,15 +64,17 @@ def seed():
             'time_complexity': 'O(n log n)',
             'space_complexity': 'O(log n)',
             'steps': json.dumps([
-            'Chọn mốc x = a[(l+r)/2], đặt i = l, j = r',
-            'Tìm a[i] ≥ x và a[j] ≤ x nằm sai vị trí',
-            'Nếu i ≤ j → Hoán vị a[i] ↔ a[j], tăng i, giảm j',
-            'Lặp lại kiểm tra cho đến khi i > j',
-            'Đệ quy với dãy con bên trái l đến j và bên phải i đến r'
-        ]),
+                'Chọn mốc x = a[(l+r)/2], đặt i = l, j = r',
+                'Tìm a[i] ≥ x và a[j] ≤ x nằm sai vị trí',
+                'Nếu i ≤ j → Hoán vị a[i] ↔ a[j], tăng i, giảm j',
+                'Lặp lại kiểm tra cho đến khi i > j',
+                'Đệ quy với dãy con bên trái l đến j và bên phải i đến r'
+            ]),
             'category_id': cat_sort.id,
             'slug': 'quick-sort',
-            'status': 1
+            'status': 1,
+            'is_custom': False,
+            'code_filename': None
         })
         print("Created algorithm: Quick Sort")
 
@@ -82,12 +87,14 @@ def seed():
             'category_id': cat_sort.id,
             'slug': 'interchange-sort',
             'steps': json.dumps([
-            'Duyệt i từ 0 đến n-2',
-            'Duyệt j từ i+1 đến n-1',
-            'Nếu a[i] > a[j] → hoán đổi a[i] ↔ a[j]',
-            'Tăng i, lặp lại'
-        ]),
-            'status': 1
+                'Duyệt i từ 0 đến n-2',
+                'Duyệt j từ i+1 đến n-1',
+                'Nếu a[i] > a[j] → hoán đổi a[i] ↔ a[j]',
+                'Tăng i, lặp lại'
+            ]),
+            'status': 1,
+            'is_custom': False,
+            'code_filename': None
         })
         print("Created algorithm: Interchange Sort")
 
@@ -98,15 +105,17 @@ def seed():
             'time_complexity': 'O(n)',
             'space_complexity': 'O(1)',
             'steps': json.dumps([
-            'Bắt đầu từ i = 0',
-            'So sánh arr[i] với giá trị cần tìm',
-            'Nếu bằng → trả về i (tìm thấy)',
-            'Nếu không → tăng i lên 1 và lặp lại',
-            'Nếu i >= N mà chưa tìm thấy → trả về -1'
-        ]),
+                'Bắt đầu từ i = 0',
+                'So sánh arr[i] với giá trị cần tìm',
+                'Nếu bằng → trả về i (tìm thấy)',
+                'Nếu không → tăng i lên 1 và lặp lại',
+                'Nếu i >= N mà chưa tìm thấy → trả về -1'
+            ]),
             'category_id': cat_search.id,
             'slug': 'linear-search',
-            'status': 1
+            'status': 1,
+            'is_custom': False,
+            'code_filename': None
         })
         print("Created algorithm: Linear Search")
 
@@ -117,17 +126,19 @@ def seed():
             'time_complexity': 'O(log n)',
             'space_complexity': 'O(1)',
             'steps': json.dumps([
-            'Đặt left = 0, right = N-1',
-            'Tính mid = (left + right) / 2',
-            'So sánh arr[mid] với x',
-            'Nếu bằng → trả về mid',
-            'Nếu arr[mid] < x → left = mid + 1',
-            'Nếu arr[mid] > x → right = mid - 1',
-            'Lặp lại cho đến khi tìm thấy hoặc left > right'
-        ]),
+                'Đặt left = 0, right = N-1',
+                'Tính mid = (left + right) / 2',
+                'So sánh arr[mid] với x',
+                'Nếu bằng → trả về mid',
+                'Nếu arr[mid] < x → left = mid + 1',
+                'Nếu arr[mid] > x → right = mid - 1',
+                'Lặp lại cho đến khi tìm thấy hoặc left > right'
+            ]),
             'category_id': cat_search.id,
             'slug': 'binary-search',
-            'status': 1
+            'status': 1,
+            'is_custom': False,
+            'code_filename': None
         })
         print("Created algorithm: Binary Search")
 
