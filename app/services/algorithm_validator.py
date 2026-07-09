@@ -1,0 +1,243 @@
+"""
+app/services/algorithm_validator.py
+
+Module kiểm tra và load động file thuật toán do admin upload lên.
+Dùng multiprocessing để giới hạn thời gian chạy, tương thích Windows + Linux.
+"""
+
+import ast
+import re
+import os
+import importlib.util
+import unicodedata
+import multiprocessing
+
+FORBIDDEN_MODULES = {
+    "os", "sys", "subprocess", "socket", "requests", "shutil",
+    "pickle", "ctypes", "importlib", "urllib", "http", "ftplib",
+    "smtplib", "sqlite3", "multiprocessing", "threading", "asyncio",
+    "eval", "exec", "compile", "__import__", "open", "input",
+}
+
+ALLOWED_MODULES = {"math", "random", "copy"}
+
+REQUIRED_FUNCTION_NAME = "run_logic"
+REQUIRED_STEP_KEYS = {
+    "array", "comparing", "swapping", "pivot",
+    "sorted", "line", "keys", "vals", "action"
+}
+
+MAX_STEPS = 5000
+MAX_EXECUTION_SECONDS = 15
+MAX_FILE_SIZE_BYTES = 200 * 1024
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'algorithms', 'uploaded')
+
+class AlgorithmValidationError(Exception):
+    pass
+
+
+class AlgorithmExecutionTimeout(Exception):
+    pass
+
+
+def generate_slug_from_filename(filename):
+    name = os.path.splitext(filename)[0]
+    name = unicodedata.normalize("NFD", name)
+    name = "".join(c for c in name if unicodedata.category(c) != "Mn")
+    name = re.sub(r"(?<!^)(?=[A-Z])", "-", name)
+    name = name.replace("_", "-").replace(" ", "-")
+    name = name.lower()
+    name = re.sub(r"[^a-z0-9-]", "", name)
+    name = re.sub(r"-+", "-", name).strip("-")
+    return name
+
+
+def validate_source_code(source_code: str):
+    if len(source_code.encode("utf-8")) > MAX_FILE_SIZE_BYTES:
+        raise AlgorithmValidationError(
+            f"File vượt quá giới hạn {MAX_FILE_SIZE_BYTES // 1024}KB."
+        )
+
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError as e:
+        raise AlgorithmValidationError(f"Lỗi cú pháp Python: {e}")
+
+    found_function = False
+    function_args = None
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root_module = alias.name.split(".")[0]
+                if root_module in FORBIDDEN_MODULES:
+                    raise AlgorithmValidationError(
+                        f"Không được phép import module '{root_module}'."
+                    )
+                if root_module not in ALLOWED_MODULES:
+                    raise AlgorithmValidationError(
+                        f"Module '{root_module}' không nằm trong danh sách cho phép "
+                        f"({', '.join(ALLOWED_MODULES)})."
+                    )
+        if isinstance(node, ast.ImportFrom):
+            root_module = (node.module or "").split(".")[0]
+            if root_module in FORBIDDEN_MODULES:
+                raise AlgorithmValidationError(
+                    f"Không được phép import từ module '{root_module}'."
+                )
+            if root_module not in ALLOWED_MODULES:
+                raise AlgorithmValidationError(
+                    f"Module '{root_module}' không nằm trong danh sách cho phép."
+                )
+
+        if isinstance(node, ast.Call):
+            func_name = None
+            if isinstance(node.func, ast.Name):
+                func_name = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                func_name = node.func.attr
+            if func_name in FORBIDDEN_MODULES:
+                raise AlgorithmValidationError(
+                    f"Không được phép gọi hàm '{func_name}'."
+                )
+
+        if isinstance(node, ast.FunctionDef) and node.name == REQUIRED_FUNCTION_NAME:
+            found_function = True
+            function_args = [arg.arg for arg in node.args.args]
+
+    if not found_function:
+        raise AlgorithmValidationError(
+            f"File phải có hàm tên chính xác '{REQUIRED_FUNCTION_NAME}(arr, sort_order=\"asc\")'."
+        )
+
+    if function_args is None or function_args[:1] != ["arr"]:
+        raise AlgorithmValidationError(
+            f"Hàm '{REQUIRED_FUNCTION_NAME}' phải có tham số đầu tiên tên 'arr'."
+        )
+
+    return True
+
+
+def _worker_run_algorithm(filepath, module_name, test_array, queue):
+    """
+    Hàm chạy trong tiến trình con: load module, gọi run_logic và trả kết quả qua queue.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(module_name, filepath)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        func = getattr(module, REQUIRED_FUNCTION_NAME)
+        result = func(test_array.copy(), "asc")
+        queue.put(("ok", result))
+    except Exception as e:
+        queue.put(("error", str(e)))
+
+
+def load_and_test_module(filepath: str, slug: str):
+    """
+    Load module động và CHẠY THỬ với mảng mẫu trong tiến trình con có timeout.
+    """
+    module_name = f"uploaded_algo_{slug.replace('-', '_')}"
+    test_array = [5, 3, 8, 1, 9, 2, 7]
+
+    queue = multiprocessing.Queue()
+    process = multiprocessing.Process(
+        target=_worker_run_algorithm,
+        args=(filepath, module_name, test_array, queue)
+    )
+    process.start()
+    process.join(timeout=MAX_EXECUTION_SECONDS)
+
+    if process.is_alive():
+        process.terminate()
+        process.join()
+        raise AlgorithmValidationError(
+            f"Thuật toán chạy quá {MAX_EXECUTION_SECONDS} giây — có thể bị lặp vô hạn."
+        )
+
+    if queue.empty():
+        raise AlgorithmValidationError("Tiến trình con không trả về kết quả.")
+
+    status, value = queue.get()
+    if status == "error":
+        raise AlgorithmValidationError(f"Lỗi khi chạy thử thuật toán: {value}")
+
+    sorted_arr, steps_count, comparisons, swaps, steps_history = value
+
+    if not isinstance(sorted_arr, list):
+        raise AlgorithmValidationError("Giá trị trả về đầu tiên (sorted_arr) phải là list.")
+
+    if not isinstance(steps_history, list) or len(steps_history) == 0:
+        raise AlgorithmValidationError("steps_history phải là list và không được rỗng.")
+
+    if len(steps_history) > MAX_STEPS:
+        raise AlgorithmValidationError(
+            f"steps_history có {len(steps_history)} bước, vượt quá giới hạn {MAX_STEPS}. "
+            "Kiểm tra lại thuật toán có bị lặp vô hạn không."
+        )
+
+    for idx, step in enumerate(steps_history):
+        if not isinstance(step, dict):
+            raise AlgorithmValidationError(f"Bước thứ {idx} trong steps_history không phải dict.")
+        missing_keys = REQUIRED_STEP_KEYS - set(step.keys())
+        if missing_keys:
+            raise AlgorithmValidationError(
+                f"Bước thứ {idx} thiếu các key bắt buộc: {', '.join(missing_keys)}."
+            )
+        if not isinstance(step["keys"], list) or not isinstance(step["vals"], list):
+            raise AlgorithmValidationError(
+                f"Bước thứ {idx}: 'keys' và 'vals' phải là list."
+            )
+        if len(step["keys"]) != len(step["vals"]):
+            raise AlgorithmValidationError(
+                f"Bước thứ {idx}: 'keys' và 'vals' phải có cùng độ dài."
+            )
+
+    if sorted(test_array) != sorted_arr:
+        raise AlgorithmValidationError(
+            "Kết quả sắp xếp không chứa đúng các phần tử ban đầu."
+        )
+
+    return True
+
+
+def validate_and_save_algorithm_file(file_storage, original_filename: str):
+    if not original_filename.endswith(".py"):
+        raise AlgorithmValidationError("Chỉ chấp nhận file .py")
+
+    slug = generate_slug_from_filename(original_filename)
+    if not slug:
+        raise AlgorithmValidationError("Không thể tạo slug hợp lệ từ tên file.")
+
+    source_code = file_storage.read().decode("utf-8")
+    file_storage.seek(0)
+
+    validate_source_code(source_code)
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    temp_filepath = os.path.join(UPLOAD_DIR, f"_temp_{slug}.py")
+    with open(temp_filepath, "w", encoding="utf-8") as f:
+        f.write(source_code)
+
+    try:
+        load_and_test_module(temp_filepath, slug)
+        final_filepath = os.path.join(UPLOAD_DIR, f"{slug}.py")
+        os.replace(temp_filepath, final_filepath)
+        return slug, final_filepath
+    except AlgorithmValidationError:
+        if os.path.exists(temp_filepath):
+            os.remove(temp_filepath)
+        raise
+
+
+def load_uploaded_algorithm_function(slug: str):
+    filepath = os.path.join(UPLOAD_DIR, f"{slug}.py")
+    if not os.path.exists(filepath):
+        return None
+
+    module_name = f"uploaded_algo_{slug.replace('-', '_')}"
+    spec = importlib.util.spec_from_file_location(module_name, filepath)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, REQUIRED_FUNCTION_NAME, None)

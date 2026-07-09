@@ -36,7 +36,9 @@ class AlgorithmRepository:
             steps=data.get('steps'),
             category_id=data.get('category_id', 1),
             slug=data['slug'],
-            status=data.get('status', 1)
+            status=data.get('status', 1),
+            is_custom=data.get('is_custom', False),          
+            code_filename=data.get('code_filename', None)     
         )
         db.session.add(algorithm)
         db.session.commit()

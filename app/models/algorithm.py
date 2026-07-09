@@ -1,6 +1,5 @@
 from app.database.db import db
 
-
 class Algorithm(db.Model):
     __tablename__ = 'thuattoan'
 
@@ -14,6 +13,9 @@ class Algorithm(db.Model):
     category_id = db.Column('loaiThuatToan', db.Integer, db.ForeignKey('loaithuattoan.idLoai'))
     slug = db.Column(db.String(50), unique=True, nullable=False)
     status = db.Column('trangThai', db.Integer, default=1)
+
+    is_custom = db.Column(db.Boolean, default=False, nullable=False)
+    code_filename = db.Column(db.String(255), nullable=True)
 
     simulation_histories = db.relationship('SimulationHistory', backref='algorithm', lazy=True)
 
@@ -29,5 +31,7 @@ class Algorithm(db.Model):
             "steps": json.loads(self.steps) if self.steps else [],
             "category_id": self.category_id,
             "slug": self.slug,
-            "status": self.status
+            "status": self.status,
+            "is_custom": self.is_custom,
+            "code_filename": self.code_filename
         }

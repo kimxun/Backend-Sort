@@ -12,6 +12,11 @@ from app.algorithms.search.binary_search import binary_search_logic
 from app.services.sort_service import SortService
 from app.repositories.algorithm_repository import AlgorithmRepository
 from app.utils.auth_decorator import jwt_required, roles_required
+from app.services.algorithm_validator import (
+    validate_and_save_algorithm_file,
+    load_uploaded_algorithm_function,
+    AlgorithmValidationError,
+)
 
 algorithm_bp = Blueprint('algorithm', __name__)
 
@@ -25,6 +30,8 @@ SEARCH_FUNC_MAP = {
     'linear-search': linear_search_logic,
     'binary-search': binary_search_logic,
 }
+
+MAX_UPLOAD_SIZE = 200 * 1024
 
 
 def _is_admin_request():
@@ -68,6 +75,15 @@ def create_algorithm():
         if not all(k in data for k in required):
             return jsonify({"error": f"Missing required fields: {required}"}), 400
 
+        if data.get('is_custom') and data['slug'] in ALGO_FUNC_MAP:
+            return jsonify({
+                "error": (
+                    f"Slug '{data['slug']}' trùng với thuật toán hệ thống đã có sẵn. "
+                    "File upload của bạn sẽ KHÔNG được dùng vì hệ thống ưu tiên thuật toán "
+                    "hardcode trước. Vui lòng đổi tên file/slug khác."
+                )
+            }), 400
+
         data.setdefault('category_id', 1)
         data.setdefault('status', 1)
         data.setdefault('code', '')
@@ -75,6 +91,14 @@ def create_algorithm():
         data.setdefault('time_complexity', '')
         data.setdefault('space_complexity', '')
         data.setdefault('steps', None)
+        data.setdefault('is_custom', False)
+        data.setdefault('code_filename', None)
+        if data.get('code_filename'):
+            data['is_custom'] = True
+        if data['is_custom'] and not data.get('code_filename'):
+            return jsonify({
+                "error": "Thiếu code_filename. Vui lòng upload file thuật toán trước khi lưu."
+            }), 400
 
         if 'steps' in data and data['steps'] is not None:
             if isinstance(data['steps'], list):
@@ -127,6 +151,8 @@ def sort_algorithm():
         return jsonify({"error": "Algorithm not found"}), 404
 
     func = ALGO_FUNC_MAP.get(algorithm.slug)
+    if not func and algorithm.code_filename:
+        func = load_uploaded_algorithm_function(algorithm.code_filename.replace('.py', ''))
     if not func:
         return jsonify({"error": "Algorithm does not support step-by-step"}), 400
 
@@ -181,6 +207,8 @@ def get_algorithm_steps(algorithm_id):
         return jsonify({"error": "Algorithm not found"}), 404
 
     func = ALGO_FUNC_MAP.get(algorithm.slug)
+    if not func and getattr(algorithm, 'is_custom', False):
+        func = load_uploaded_algorithm_function(algorithm.slug)
     if not func:
         return jsonify({"error": "Algorithm does not support step-by-step"}), 400
 
@@ -265,6 +293,15 @@ def search_algorithm_steps(algorithm_id):
 def update_algorithm(algorithm_id):
     try:
         data = request.get_json()
+
+        if data.get('is_custom') and data.get('slug') in ALGO_FUNC_MAP:
+            return jsonify({
+                "error": (
+                    f"Slug '{data['slug']}' trùng với thuật toán hệ thống đã có sẵn. "
+                    "Vui lòng đổi slug khác cho thuật toán tuỳ chỉnh."
+                )
+            }), 400
+
         if 'steps' in data and data['steps'] is not None:
             if isinstance(data['steps'], list):
                 data['steps'] = json.dumps(data['steps'])
@@ -296,3 +333,39 @@ def delete_algorithm(algorithm_id):
         print("LỖI DELETE /algorithms/<id>:", e)
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+@algorithm_bp.route('/upload-code', methods=['POST'])
+@jwt_required
+@roles_required(1)
+def upload_algorithm_code():
+    if 'file' not in request.files:
+        return jsonify({"error": "Không tìm thấy file trong request"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Chưa chọn file"}), 400
+
+    if not file.filename.endswith('.py'):
+        return jsonify({"error": "Chỉ chấp nhận file .py"}), 400
+
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > MAX_UPLOAD_SIZE:
+        return jsonify({"error": f"File vượt quá {MAX_UPLOAD_SIZE // 1024}KB"}), 400
+
+    try:
+        slug, filepath = validate_and_save_algorithm_file(file, file.filename)
+        return jsonify({
+            "message": "File hợp lệ và đã lưu thành công",
+            "slug": slug,
+            "code_filename": f"{slug}.py",
+            "is_custom": True
+        }), 200
+    except AlgorithmValidationError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        print("LỖI POST /upload-code:", e)
+        traceback.print_exc()
+        return jsonify({"error": f"Lỗi không xác định: {str(e)}"}), 500
