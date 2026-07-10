@@ -1,10 +1,3 @@
-"""
-app/services/algorithm_validator.py
-
-Module kiểm tra và load động file thuật toán do admin upload lên.
-Dùng multiprocessing để giới hạn thời gian chạy, tương thích Windows + Linux.
-"""
-
 import ast
 import re
 import os
@@ -33,6 +26,7 @@ MAX_FILE_SIZE_BYTES = 200 * 1024
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'algorithms', 'uploaded')
 
+
 class AlgorithmValidationError(Exception):
     pass
 
@@ -51,6 +45,48 @@ def generate_slug_from_filename(filename):
     name = re.sub(r"[^a-z0-9-]", "", name)
     name = re.sub(r"-+", "-", name).strip("-")
     return name
+
+
+def remove_docstring(source):
+    stripped = source.lstrip()
+    if stripped.startswith('"""') or stripped.startswith("'''"):
+        quote = stripped[:3]
+        end = stripped.find(quote, 3)
+        if end != -1:
+            return stripped[end+3:].lstrip()
+    return source
+
+
+def extract_display_code(source_code):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "DISPLAY_CODE":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        return node.value.value
+    return None
+
+
+def extract_features(source_code):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "FEATURES":
+                    if isinstance(node.value, ast.List):
+                        features = []
+                        for item in node.value.elts:
+                            if isinstance(item, ast.Constant) and isinstance(item.value, str):
+                                features.append(item.value)
+                        return features
+    return []
 
 
 def validate_source_code(source_code: str):
@@ -120,9 +156,6 @@ def validate_source_code(source_code: str):
 
 
 def _worker_run_algorithm(filepath, module_name, test_array, queue):
-    """
-    Hàm chạy trong tiến trình con: load module, gọi run_logic và trả kết quả qua queue.
-    """
     try:
         spec = importlib.util.spec_from_file_location(module_name, filepath)
         module = importlib.util.module_from_spec(spec)
@@ -135,9 +168,6 @@ def _worker_run_algorithm(filepath, module_name, test_array, queue):
 
 
 def load_and_test_module(filepath: str, slug: str):
-    """
-    Load module động và CHẠY THỬ với mảng mẫu trong tiến trình con có timeout.
-    """
     module_name = f"uploaded_algo_{slug.replace('-', '_')}"
     test_array = [5, 3, 8, 1, 9, 2, 7]
 
@@ -213,6 +243,11 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
     source_code = file_storage.read().decode("utf-8")
     file_storage.seek(0)
 
+    display_code = extract_display_code(source_code)
+    features = extract_features(source_code)
+
+    source_code = remove_docstring(source_code)
+
     validate_source_code(source_code)
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -224,7 +259,7 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
         load_and_test_module(temp_filepath, slug)
         final_filepath = os.path.join(UPLOAD_DIR, f"{slug}.py")
         os.replace(temp_filepath, final_filepath)
-        return slug, final_filepath
+        return slug, final_filepath, display_code, features
     except AlgorithmValidationError:
         if os.path.exists(temp_filepath):
             os.remove(temp_filepath)

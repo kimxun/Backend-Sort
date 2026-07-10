@@ -1,7 +1,9 @@
+import os
 from app.database.db import db
 from app.models.algorithm import Algorithm
 from app.models.simulation_history import SimulationHistory
 from app.config.cache import cache
+
 
 class AlgorithmRepository:
     @staticmethod
@@ -37,8 +39,9 @@ class AlgorithmRepository:
             category_id=data.get('category_id', 1),
             slug=data['slug'],
             status=data.get('status', 1),
-            is_custom=data.get('is_custom', False),          
-            code_filename=data.get('code_filename', None)     
+            is_custom=data.get('is_custom', False),
+            code_filename=data.get('code_filename', None),
+            features=data.get('features', None)
         )
         db.session.add(algorithm)
         db.session.commit()
@@ -69,6 +72,7 @@ class AlgorithmRepository:
 
     @staticmethod
     def delete(algorithm_id, permanent=False):
+        from app.services.algorithm_validator import UPLOAD_DIR
         algorithm = Algorithm.query.get(algorithm_id)
         if not algorithm:
             return False
@@ -78,6 +82,12 @@ class AlgorithmRepository:
         else:
             algorithm.status = 0
         db.session.commit()
+
+        if algorithm.code_filename:
+            filepath = os.path.join(UPLOAD_DIR, algorithm.code_filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
         cache.delete_memoized(AlgorithmRepository.get_all)
         cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm_id)
         cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
