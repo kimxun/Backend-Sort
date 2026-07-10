@@ -16,6 +16,7 @@ class Algorithm(db.Model):
 
     is_custom = db.Column(db.Boolean, default=False, nullable=False)
     code_filename = db.Column(db.String(255), nullable=True)
+    features = db.Column(db.String(255), nullable=True)
 
     simulation_histories = db.relationship('SimulationHistory', backref='algorithm', lazy=True)
 
@@ -33,5 +34,6 @@ class Algorithm(db.Model):
             "slug": self.slug,
             "status": self.status,
             "is_custom": self.is_custom,
-            "code_filename": self.code_filename
+            "code_filename": self.code_filename,
+            "features": json.loads(self.features) if self.features else []
         }

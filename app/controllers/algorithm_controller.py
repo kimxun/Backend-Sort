@@ -93,6 +93,7 @@ def create_algorithm():
         data.setdefault('steps', None)
         data.setdefault('is_custom', False)
         data.setdefault('code_filename', None)
+        data.setdefault('features', None)
         if data.get('code_filename'):
             data['is_custom'] = True
         if data['is_custom'] and not data.get('code_filename'):
@@ -105,6 +106,9 @@ def create_algorithm():
                 data['steps'] = json.dumps(data['steps'])
             elif isinstance(data['steps'], str) and data['steps'].strip() == '':
                 data['steps'] = None
+
+        if 'features' in data and isinstance(data['features'], list):
+            data['features'] = json.dumps(data['features'])
 
         new_algorithm = SortService.create_algorithm(data)
         return jsonify(new_algorithm.to_dict()), 201
@@ -207,8 +211,8 @@ def get_algorithm_steps(algorithm_id):
         return jsonify({"error": "Algorithm not found"}), 404
 
     func = ALGO_FUNC_MAP.get(algorithm.slug)
-    if not func and getattr(algorithm, 'is_custom', False):
-        func = load_uploaded_algorithm_function(algorithm.slug)
+    if not func and algorithm.code_filename:
+        func = load_uploaded_algorithm_function(algorithm.code_filename.replace('.py', ''))
     if not func:
         return jsonify({"error": "Algorithm does not support step-by-step"}), 400
 
@@ -356,12 +360,14 @@ def upload_algorithm_code():
         return jsonify({"error": f"File vượt quá {MAX_UPLOAD_SIZE // 1024}KB"}), 400
 
     try:
-        slug, filepath = validate_and_save_algorithm_file(file, file.filename)
+        slug, filepath, display_code, features = validate_and_save_algorithm_file(file, file.filename)
         return jsonify({
             "message": "File hợp lệ và đã lưu thành công",
             "slug": slug,
             "code_filename": f"{slug}.py",
-            "is_custom": True
+            "is_custom": True,
+            "display_code": display_code,
+            "features": features
         }), 200
     except AlgorithmValidationError as e:
         return jsonify({"error": str(e)}), 400

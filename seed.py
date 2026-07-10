@@ -53,7 +53,8 @@ def seed():
             'slug': 'selection-sort',
             'status': 1,
             'is_custom': False,
-            'code_filename': None
+            'code_filename': None,
+            'features': json.dumps([])
         })
         print("Created algorithm: Selection Sort")
 
@@ -74,7 +75,8 @@ def seed():
             'slug': 'quick-sort',
             'status': 1,
             'is_custom': False,
-            'code_filename': None
+            'code_filename': None,
+            'features': json.dumps(["pivot"])
         })
         print("Created algorithm: Quick Sort")
 
@@ -94,7 +96,8 @@ def seed():
             ]),
             'status': 1,
             'is_custom': False,
-            'code_filename': None
+            'code_filename': None,
+            'features': json.dumps([])
         })
         print("Created algorithm: Interchange Sort")
 
@@ -115,7 +118,8 @@ def seed():
             'slug': 'linear-search',
             'status': 1,
             'is_custom': False,
-            'code_filename': None
+            'code_filename': None,
+            'features': json.dumps([])
         })
         print("Created algorithm: Linear Search")
 
@@ -138,7 +142,8 @@ def seed():
             'slug': 'binary-search',
             'status': 1,
             'is_custom': False,
-            'code_filename': None
+            'code_filename': None,
+            'features': json.dumps([])
         })
         print("Created algorithm: Binary Search")
 
