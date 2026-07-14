@@ -3,6 +3,7 @@ from flasgger import swag_from
 import traceback
 import json
 import jwt
+import hashlib
 import time
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
@@ -60,38 +61,26 @@ def _get_user_or_guest():
             pass
 
     guest_id = request.headers.get('X-Guest-ID')
-    if not guest_id:
-        return None, None
-    return None, guest_id
+    if guest_id:
+        return None, f"guest:{guest_id}"
+
+    user_ip = request.remote_addr or "unknown_ip"
+    user_agent = request.headers.get('User-Agent', '')
+    raw_identifier = f"{user_ip}_{user_agent}"
+    device_id = hashlib.md5(raw_identifier.encode()).hexdigest()
+
+    return None, f"device:{device_id}"
 
 
-def _check_free_tier_and_increment(guest_id):
-    if not guest_id:
-        return True
-    cache_key = f"free_tier:{guest_id}"
-    data = cache.get(cache_key)
-    now = time.time()
-    if data is None:
-        record = {"count": 1, "first_used": now}
-        cache.set(cache_key, json.dumps(record), timeout=None)
-        return True
-    else:
-        try:
-            record = json.loads(data) if isinstance(data, str) else data
-        except:
-            record = {"count": 1, "first_used": now}
-        first_used = record.get("first_used", now)
-        count = record.get("count", 0)
-        if now - first_used > FREE_TIER_RESET_SECONDS:
-            new_record = {"count": 1, "first_used": now}
-            cache.set(cache_key, json.dumps(new_record), timeout=None)
-            return True
-        if count < FREE_TIER_LIMIT:
-            record["count"] = count + 1
-            cache.set(cache_key, json.dumps(record), timeout=None)
-            return True
-        else:
-            return False
+def _check_free_tier_and_increment(identifier):
+    cache_key = f"free_tier:{identifier}"
+    count = cache.get(cache_key) or 0
+
+    if int(count) >= FREE_TIER_LIMIT:
+        return False
+
+    cache.set(cache_key, int(count) + 1, timeout=FREE_TIER_RESET_SECONDS)
+    return True
 
 
 @algorithm_bp.route('', methods=['GET'])

@@ -31,8 +31,10 @@ class AuthService:
     def _validate_password(password):
         if not password:
             raise ValueError("Vui lòng nhập mật khẩu mới")
-        if len(password) < 8:
-            raise ValueError("Mật khẩu phải có ít nhất 8 ký tự")
+        if len(password) < 6:
+            raise ValueError("Mật khẩu phải có ít nhất 6 ký tự")
+        if not re.search(r"[A-Za-zÀ-ỹ]", password):
+            raise ValueError("Mật khẩu phải có ít nhất 1 chữ cái")
 
     @staticmethod
     def _otp_key(email):
@@ -113,6 +115,8 @@ class AuthService:
 
         if AuthRepository.find_by_email(email):
             raise ValueError("Email đã tồn tại")
+
+        AuthService._validate_password(data["password"])
 
         user = User(
             username=username,
