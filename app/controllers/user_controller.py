@@ -1,6 +1,9 @@
 from flask import request, jsonify, Blueprint
 from flasgger import swag_from
 from werkzeug.security import generate_password_hash
+from sqlalchemy.exc import IntegrityError
+from app.database.db import db
+from app.repositories.auth_repository import AuthRepository
 from app.repositories.user_repository import UserRepository
 from app.utils.auth_decorator import jwt_required, roles_required
 from app.services.auth_service import AuthService
@@ -32,19 +35,42 @@ def get_user(user_id):
 @roles_required(1)
 @swag_from('../apidocs/user_create.yml')
 def create_user():
-    data = request.get_json()
-    print("🔥 RAW DATA:", data)
-    print("🔥 TYPE:", type(data))
+    data = request.get_json(silent=True) or {}
     required = ['username', 'password', 'full_name', 'email', 'role']
-    if not all(k in data for k in required):
-        return jsonify({"error": f"Missing fields, required: {required}"}), 400
+    field_labels = {
+        'username': 'tên đăng nhập',
+        'password': 'mật khẩu',
+        'full_name': 'họ và tên',
+        'email': 'email',
+        'role': 'vai trò'
+    }
+    missing = [
+        field for field in required
+        if field not in data or (field != 'role' and not str(data.get(field, '')).strip())
+    ]
+    if missing:
+        missing_labels = ', '.join(field_labels[field] for field in missing)
+        return jsonify({"error": f"Vui lòng nhập: {missing_labels}"}), 400
     try:
-      AuthService._validate_password(data['password'])
-      data['password'] = generate_password_hash(data['password'])
-      user = UserRepository.create(data)
-      return jsonify(user.to_dict()), 201
+        data['username'] = data['username'].strip()
+        data['full_name'] = data['full_name'].strip()
+        data['email'] = AuthService._normalize_email(data['email'])
+
+        AuthService._validate_email(data['email'])
+        AuthService._validate_password(data['password'])
+
+        if UserRepository.get_by_username(data['username']):
+            return jsonify({"error": "Tên tài khoản đã tồn tại"}), 400
+        if AuthRepository.find_by_email(data['email']):
+            return jsonify({"error": "Email đã tồn tại"}), 400
+
+        data['password'] = generate_password_hash(data['password'])
+        user = UserRepository.create(data)
+        return jsonify(user.to_dict()), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Tên tài khoản hoặc email đã tồn tại"}), 400
     except Exception as e:
-        print("🔥 ERROR FULL:", repr(e))   # 👈 THÊM DÒNG NÀY
         return jsonify({"error": str(e)}), 400
 
 @user_bp.route('/<int:user_id>', methods=['PUT'])
@@ -52,8 +78,26 @@ def create_user():
 @roles_required(1)
 @swag_from('../apidocs/user_update.yml')
 def update_user(user_id):
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     try:
+        current_user = UserRepository.get_by_id(user_id)
+        if not current_user:
+            return jsonify({"error": "User not found"}), 404
+
+        if 'full_name' in data and isinstance(data['full_name'], str):
+            data['full_name'] = data['full_name'].strip()
+            if not data['full_name']:
+                return jsonify({"error": "Vui lòng nhập họ và tên"}), 400
+
+        if 'email' in data:
+            if not str(data.get('email', '')).strip():
+                return jsonify({"error": "Vui lòng nhập email"}), 400
+            data['email'] = AuthService._normalize_email(data['email'])
+            AuthService._validate_email(data['email'])
+            existing_email_user = AuthRepository.find_by_email(data['email'])
+            if existing_email_user and existing_email_user.id != user_id:
+                return jsonify({"error": "Email đã tồn tại"}), 400
+
         if data.get('password'):
             AuthService._validate_password(data['password'])
             data['password'] = generate_password_hash(data['password'])
@@ -64,6 +108,9 @@ def update_user(user_id):
         if not user:
             return jsonify({"error": "User not found"}), 404
         return jsonify(user.to_dict()), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Tên tài khoản hoặc email đã tồn tại"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
