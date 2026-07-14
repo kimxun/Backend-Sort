@@ -4,6 +4,7 @@ import traceback
 import json
 import jwt
 import time
+import hashlib
 from app.algorithms.selection_sort import selection_sort_logic
 from app.algorithms.quick_sort import quick_sort_logic
 from app.algorithms.interchange_sort import interchange_sort_logic
@@ -50,48 +51,53 @@ def _is_admin_request():
 
 
 def _get_user_or_guest():
-    auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
+    auth_header = request.headers.get("Authorization")
+
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+
         try:
-            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            payload = jwt.decode(
+                token,
+                current_app.config["SECRET_KEY"],
+                algorithms=["HS256"]
+            )
             return payload, None
-        except:
+        except Exception:
             pass
 
-    guest_id = request.headers.get('X-Guest-ID')
-    if not guest_id:
-        return None, None
+    # Khách vãng lai: tạo mã định danh từ IP và User-Agent
+    user_ip = request.remote_addr or "unknown_ip"
+    user_agent = request.headers.get("User-Agent", "unknown_device")
+
+    raw_identifier = f"{user_ip}_{user_agent}"
+
+    guest_id = hashlib.md5(raw_identifier.encode("utf-8")).hexdigest()
     return None, guest_id
 
 
 def _check_free_tier_and_increment(guest_id):
     if not guest_id:
         return True
+
     cache_key = f"free_tier:{guest_id}"
-    data = cache.get(cache_key)
-    now = time.time()
-    if data is None:
-        record = {"count": 1, "first_used": now}
-        cache.set(cache_key, json.dumps(record), timeout=None)
+    count = cache.get(cache_key)
+
+    # Lượt sử dụng đầu tiên
+    if count is None:
+        cache.set( cache_key, 1,timeout=FREE_TIER_RESET_SECONDS)
         return True
-    else:
-        try:
-            record = json.loads(data) if isinstance(data, str) else data
-        except:
-            record = {"count": 1, "first_used": now}
-        first_used = record.get("first_used", now)
-        count = record.get("count", 0)
-        if now - first_used > FREE_TIER_RESET_SECONDS:
-            new_record = {"count": 1, "first_used": now}
-            cache.set(cache_key, json.dumps(new_record), timeout=None)
-            return True
-        if count < FREE_TIER_LIMIT:
-            record["count"] = count + 1
-            cache.set(cache_key, json.dumps(record), timeout=None)
-            return True
-        else:
-            return False
+
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        cache.set(cache_key,1,timeout=FREE_TIER_RESET_SECONDS)
+        return True
+    
+    if count >= FREE_TIER_LIMIT:
+        return False
+    cache.set( cache_key,count + 1,timeout=FREE_TIER_RESET_SECONDS)
+    return True
 
 
 @algorithm_bp.route('', methods=['GET'])
@@ -190,9 +196,6 @@ def sort_algorithm():
         return jsonify({"error": "'array' must be a list"}), 400
 
     user, guest_id = _get_user_or_guest()
-    if not user and not guest_id:
-        return jsonify({"error": "Guest ID required"}), 400
-
     if guest_id and not _check_free_tier_and_increment(guest_id):
         return jsonify({
             "error": "Free limit exceeded",
