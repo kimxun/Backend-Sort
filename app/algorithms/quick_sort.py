@@ -81,7 +81,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                         else (
                             f"Đang kiểm tra a[{i}] = {sorted_arr[i]}. "
                             f"Giá trị này chưa nằm đúng phía so với pivot ({x}), "
-                            f"nên con trỏ i dừng tại vị trí {i}."
+                            f"nên vị trí i dừng tại vị trí {i}."
                         )
                     )
                 })
@@ -121,7 +121,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                         else (
                             f"Đang kiểm tra a[{j}] = {sorted_arr[j]}. "
                             f"Giá trị này chưa nằm đúng phía so với pivot ({x}), "
-                            f"nên con trỏ j dừng tại vị trí {j}."
+                            f"nên vị trí j dừng tại vị trí {j}."
                         )
                     )
                 })
@@ -155,14 +155,14 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "vals": [i, j],
                     "action": (
                         (
-                            f"Con trỏ i = {i} chưa vượt con trỏ j = {j}. "
+                            f"Vị trí i = {i} chưa vượt vị trí j = {j}. "
                             f"Giá trị {left_value} ở bên trái và {right_value} ở bên phải "
                             f"chưa nằm đúng phía của pivot {x}, nên hoán đổi hai giá trị. "
                             f"Sau đó tăng i lên {i + 1} và giảm j xuống {j - 1}."
                         )
                         if i != j
                         else (
-                            f"Hai con trỏ gặp nhau tại vị trí {i}. "
+                            f"Hai vị trí gặp nhau tại vị trí {i}. "
                             f"Giá trị {left_value} được giữ nguyên, sau đó tăng i lên {i + 1} "
                             f"và giảm j xuống {j - 1} để kết thúc chia đoạn."
                         )
@@ -182,7 +182,7 @@ def quick_sort_logic(arr, sort_order="asc"):
             "keys": ["i", "j", "l", "r"],
             "vals": [i, j, l, r],
             "action": (
-                f"Con trỏ i = {i} đã vượt con trỏ j = {j}, "
+                f"Vị trí i = {i} đã vượt vị trí j = {j}, "
                 f"nên kết thúc chia đoạn từ {l} đến {r} và không hoán đổi thêm. "
                 f"Đoạn bên trái là từ {l} đến {j}; "
                 f"đoạn bên phải là từ {i} đến {r}."
