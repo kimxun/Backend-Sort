@@ -44,8 +44,7 @@ def seed():
             'space_complexity': 'O(1)',
             'steps': json.dumps([
                 'Đặt i = 0, minIdx = i',
-                'Duyệt j từ i+1 đến cuối',
-                'Nếu a[j] < a[minIdx] → minIdx = j',
+                'Duyệt j từ i+1 đến cuối:\n    Nếu a[j] < a[minIdx] → minIdx = j',
                 'Hoán đổi a[i] ↔ a[minIdx]',
                 'Tăng i, lặp lại'
             ]),
@@ -68,7 +67,7 @@ def seed():
                 'Chọn mốc x = a[(l+r)/2], đặt i = l, j = r',
                 'Tìm a[i] ≥ x và a[j] ≤ x nằm sai vị trí',
                 'Nếu i ≤ j → Hoán vị a[i] ↔ a[j], tăng i, giảm j',
-                'Lặp lại kiểm tra cho đến khi i > j',
+                'Lặp lại bước 2 cho đến khi i > j',
                 'Đệ quy với dãy con bên trái l đến j và bên phải i đến r'
             ]),
             'category_id': cat_sort.id,
