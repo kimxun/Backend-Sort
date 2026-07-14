@@ -1,0 +1,21 @@
+﻿Backend-Sort/
+├── app
+│   ├── algorithms
+│   ├── apidocs
+│   ├── config
+│   ├── controllers
+│   ├── database
+│   ├── models
+│   ├── repositories
+│   ├── services
+│   ├── utils
+│   └── __init__.py
+├── .env
+├── .gitignore
+├── __init__.py
+├── app.py
+├── env.example
+├── et --hard 1c6e530
+├── README.md
+├── requirements.txt
+└── seed.py

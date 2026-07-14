@@ -1,7 +1,9 @@
 from flask import request, jsonify, Blueprint
 from flasgger import swag_from
+from werkzeug.security import generate_password_hash
 from app.repositories.user_repository import UserRepository
 from app.utils.auth_decorator import jwt_required, roles_required
+from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
@@ -37,6 +39,8 @@ def create_user():
     if not all(k in data for k in required):
         return jsonify({"error": f"Missing fields, required: {required}"}), 400
     try:
+      AuthService._validate_password(data['password'])
+      data['password'] = generate_password_hash(data['password'])
       user = UserRepository.create(data)
       return jsonify(user.to_dict()), 201
     except Exception as e:
@@ -49,10 +53,19 @@ def create_user():
 @swag_from('../apidocs/user_update.yml')
 def update_user(user_id):
     data = request.get_json()
-    user = UserRepository.update(user_id, data)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    return jsonify(user.to_dict()), 200
+    try:
+        if data.get('password'):
+            AuthService._validate_password(data['password'])
+            data['password'] = generate_password_hash(data['password'])
+        else:
+            data.pop('password', None)
+
+        user = UserRepository.update(user_id, data)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify(user.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required
