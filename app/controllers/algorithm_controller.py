@@ -17,6 +17,7 @@ from app.services.algorithm_validator import (
     load_uploaded_algorithm_function,
     AlgorithmValidationError,
 )
+from app.config.cache import cache
 
 algorithm_bp = Blueprint('algorithm', __name__)
 
@@ -32,6 +33,8 @@ SEARCH_FUNC_MAP = {
 }
 
 MAX_UPLOAD_SIZE = 200 * 1024
+FREE_TIER_LIMIT = 3
+FREE_TIER_RESET_SECONDS = 86400
 
 
 def _is_admin_request():
@@ -44,6 +47,51 @@ def _is_admin_request():
         return payload.get('role') == 1
     except:
         return False
+
+
+def _get_user_or_guest():
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            return payload, None
+        except:
+            pass
+
+    guest_id = request.headers.get('X-Guest-ID')
+    if not guest_id:
+        return None, None
+    return None, guest_id
+
+
+def _check_free_tier_and_increment(guest_id):
+    if not guest_id:
+        return True
+    cache_key = f"free_tier:{guest_id}"
+    data = cache.get(cache_key)
+    now = time.time()
+    if data is None:
+        record = {"count": 1, "first_used": now}
+        cache.set(cache_key, json.dumps(record), timeout=None)
+        return True
+    else:
+        try:
+            record = json.loads(data) if isinstance(data, str) else data
+        except:
+            record = {"count": 1, "first_used": now}
+        first_used = record.get("first_used", now)
+        count = record.get("count", 0)
+        if now - first_used > FREE_TIER_RESET_SECONDS:
+            new_record = {"count": 1, "first_used": now}
+            cache.set(cache_key, json.dumps(new_record), timeout=None)
+            return True
+        if count < FREE_TIER_LIMIT:
+            record["count"] = count + 1
+            cache.set(cache_key, json.dumps(record), timeout=None)
+            return True
+        else:
+            return False
 
 
 @algorithm_bp.route('', methods=['GET'])
@@ -133,7 +181,6 @@ def get_algorithm(algorithm_id):
 
 
 @algorithm_bp.route('/sort', methods=['POST'])
-@jwt_required
 def sort_algorithm():
     data = request.get_json()
     if not data or 'array' not in data:
@@ -141,6 +188,16 @@ def sort_algorithm():
     input_array = data['array']
     if not isinstance(input_array, list):
         return jsonify({"error": "'array' must be a list"}), 400
+
+    user, guest_id = _get_user_or_guest()
+    if not user and not guest_id:
+        return jsonify({"error": "Guest ID required"}), 400
+
+    if guest_id and not _check_free_tier_and_increment(guest_id):
+        return jsonify({
+            "error": "Free limit exceeded",
+            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
+        }), 401
 
     algorithm_id = data.get('algorithm_id')
     algorithm_slug = data.get('algorithm')
@@ -165,16 +222,17 @@ def sort_algorithm():
         sorted_arr, steps_count, comparisons, swaps, steps_history = func(input_array, sort_order)
         execution_time_ms = int((time.perf_counter() - start_time) * 1000)
 
-        SortService.save_simulation(
-            user_id=g.current_user["id"],
-            algorithm_id=algorithm.id,
-            input_data=json.dumps(input_array),
-            sorted_result=json.dumps(sorted_arr),
-            steps=steps_count,
-            comparisons=comparisons,
-            swaps=swaps,
-            execution_time_ms=execution_time_ms
-        )
+        if user:
+            SortService.save_simulation(
+                user_id=user["id"],
+                algorithm_id=algorithm.id,
+                input_data=json.dumps(input_array),
+                sorted_result=json.dumps(sorted_arr),
+                steps=steps_count,
+                comparisons=comparisons,
+                swaps=swaps,
+                execution_time_ms=execution_time_ms
+            )
 
         return jsonify({
             "algorithm": algorithm.slug,
@@ -194,7 +252,6 @@ def sort_algorithm():
 
 
 @algorithm_bp.route('/<int:algorithm_id>/steps', methods=['POST'])
-@jwt_required
 @swag_from('../apidocs/algorithms_post_steps.yml')
 def get_algorithm_steps(algorithm_id):
     data = request.get_json()
@@ -203,6 +260,16 @@ def get_algorithm_steps(algorithm_id):
     input_array = data['array']
     if not isinstance(input_array, list):
         return jsonify({"error": "'array' must be a list"}), 400
+
+    user, guest_id = _get_user_or_guest()
+    if not user and not guest_id:
+        return jsonify({"error": "Guest ID required"}), 400
+
+    if guest_id and not _check_free_tier_and_increment(guest_id):
+        return jsonify({
+            "error": "Free limit exceeded",
+            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
+        }), 401
 
     sort_order = data.get('sortOrder', 'asc')
 
@@ -235,7 +302,6 @@ def get_algorithm_steps(algorithm_id):
 
 
 @algorithm_bp.route('/<int:algorithm_id>/search', methods=['POST'])
-@jwt_required
 def search_algorithm_steps(algorithm_id):
     data = request.get_json()
     if not data or 'array' not in data or 'target' not in data:
@@ -244,6 +310,16 @@ def search_algorithm_steps(algorithm_id):
     target = data['target']
     if not isinstance(input_array, list):
         return jsonify({"error": "'array' must be a list"}), 400
+
+    user, guest_id = _get_user_or_guest()
+    if not user and not guest_id:
+        return jsonify({"error": "Guest ID required"}), 400
+
+    if guest_id and not _check_free_tier_and_increment(guest_id):
+        return jsonify({
+            "error": "Free limit exceeded",
+            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
+        }), 401
 
     algorithm = SortService.get_algorithm_by_id(algorithm_id)
     if not algorithm:
@@ -262,19 +338,20 @@ def search_algorithm_steps(algorithm_id):
         steps, comparisons, found_index = func(input_array, target)
         execution_time_ms = int((time.perf_counter() - start_time) * 1000)
 
-        SortService.save_simulation(
-            user_id=g.current_user["id"],
-            algorithm_id=algorithm.id,
-            input_data=json.dumps(input_array),
-            sorted_result=json.dumps({
-                "target": target,
-                "found_index": found_index
-            }),
-            steps=steps,
-            comparisons=comparisons,
-            swaps=0,
-            execution_time_ms=execution_time_ms
-        )
+        if user:
+            SortService.save_simulation(
+                user_id=user["id"],
+                algorithm_id=algorithm.id,
+                input_data=json.dumps(input_array),
+                sorted_result=json.dumps({
+                    "target": target,
+                    "found_index": found_index
+                }),
+                steps=steps,
+                comparisons=comparisons,
+                swaps=0,
+                execution_time_ms=execution_time_ms
+            )
 
         return jsonify({
             'algorithm_id': algorithm_id,

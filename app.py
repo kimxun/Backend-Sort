@@ -39,7 +39,7 @@ swagger = Swagger(app)
 
 db.init_app(app)
 
-CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, origins="*", allow_headers=["Authorization", "Content-Type", "Accept", "X-Guest-ID"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 app.register_blueprint(sort_bp, url_prefix='/api/sort')
 app.register_blueprint(user_bp, url_prefix='/api/users')
