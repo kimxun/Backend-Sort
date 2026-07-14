@@ -312,6 +312,9 @@ def update_algorithm(algorithm_id):
             elif isinstance(data['steps'], str) and data['steps'].strip() == '':
                 data['steps'] = None
 
+        if 'features' in data and isinstance(data['features'], list):
+            data['features'] = json.dumps(data['features'])
+
         updated = SortService.update_algorithm(algorithm_id, data)
         if not updated:
             return jsonify({"error": "Algorithm not found"}), 404

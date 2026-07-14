@@ -64,6 +64,12 @@ class AlgorithmRepository:
             algorithm.slug = data.get('slug', algorithm.slug)
             if 'status' in data:
                 algorithm.status = data['status']
+            if 'features' in data:
+                algorithm.features = data['features']
+            if 'is_custom' in data:
+                algorithm.is_custom = data['is_custom']
+            if 'code_filename' in data:
+                algorithm.code_filename = data['code_filename']
             db.session.commit()
             cache.delete_memoized(AlgorithmRepository.get_all)
             cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm.id)
