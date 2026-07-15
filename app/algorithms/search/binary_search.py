@@ -1,6 +1,7 @@
 def binary_search_logic(arr, target):
     steps = []
     comparisons = 0
+    discarded = []
 
     left = 0
     right = len(arr) - 1
@@ -11,6 +12,7 @@ def binary_search_logic(arr, target):
         "high": right,
         "mid": None,
         "comparing": [],
+        "discarded": discarded.copy(),
         "found": False,
         "line": 2,
         "action": (
@@ -30,6 +32,7 @@ def binary_search_logic(arr, target):
             "high": right,
             "mid": mid,
             "comparing": [mid],
+            "discarded": discarded.copy(),
             "found": False,
             "line": 4,
             "action": (
@@ -46,6 +49,7 @@ def binary_search_logic(arr, target):
                 "high": right,
                 "mid": mid,
                 "comparing": [mid],
+                "discarded": discarded.copy(),
                 "found": True,
                 "line": 6,
                 "action": f"{target} bằng {arr[mid]}, tìm thấy tại vị trí {mid}"
@@ -54,6 +58,7 @@ def binary_search_logic(arr, target):
             return steps, comparisons, mid
 
         elif target < arr[mid]:
+            discarded.extend(range(mid, right + 1))
 
             steps.append({
                 "array": arr.copy(),
@@ -61,6 +66,7 @@ def binary_search_logic(arr, target):
                 "high": right,
                 "mid": mid,
                 "comparing": [],
+                "discarded": discarded.copy(),
                 "found": False,
                 "line": 8,
                 "action": (
@@ -72,6 +78,7 @@ def binary_search_logic(arr, target):
             right = mid - 1
 
         else:
+            discarded.extend(range(left, mid + 1))
 
             steps.append({
                 "array": arr.copy(),
@@ -79,6 +86,7 @@ def binary_search_logic(arr, target):
                 "high": right,
                 "mid": mid,
                 "comparing": [],
+                "discarded": discarded.copy(),
                 "found": False,
                 "line": 10,
                 "action": (
@@ -95,6 +103,7 @@ def binary_search_logic(arr, target):
         "high": right,
         "mid": None,
         "comparing": [],
+        "discarded": discarded.copy(),
         "found": False,
         "line": 12,
         "action": (
