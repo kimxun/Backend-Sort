@@ -3,6 +3,7 @@ def quick_sort_logic(arr, sort_order="asc"):
     sorted_arr = arr.copy()
     comparisons = 0
     swaps = 0
+    sorted_indices = set()
 
     steps_history.append({
         "array": sorted_arr.copy(),
@@ -18,6 +19,9 @@ def quick_sort_logic(arr, sort_order="asc"):
             f"{'tăng dần' if sort_order == 'asc' else 'giảm dần'}. "
         )
     })
+
+    def current_sorted():
+        return sorted(sorted_indices)
 
     def flatten_ranges(ranges):
         return [
@@ -47,7 +51,7 @@ def quick_sort_logic(arr, sort_order="asc"):
             "comparing": [],
             "swapping": [],
             "pivot": pivot_idx,
-            "sorted": [],
+            "sorted": current_sorted(),
             "waiting": waiting,
             "line": 3,
             "keys": ["l", "r", "pivot"],
@@ -78,7 +82,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "comparing": [i],
                     "swapping": [],
                     "pivot": pivot_idx,
-                    "sorted": [],
+                    "sorted": current_sorted(),
                     "waiting": waiting,
                     "line": 6,
                     "keys": ["i", "a[i]", "pivot"],
@@ -119,7 +123,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "comparing": [j],
                     "swapping": [],
                     "pivot": pivot_idx,
-                    "sorted": [],
+                    "sorted": current_sorted(),
                     "waiting": waiting,
                     "line": 7,
                     "keys": ["j", "a[j]", "pivot"],
@@ -164,7 +168,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                     "comparing": [],
                     "swapping": [i, j],
                     "pivot": pivot_idx,
-                    "sorted": [],
+                    "sorted": current_sorted(),
                     "waiting": waiting,
                     "line": 9,
                     "keys": ["i", "j"],
@@ -193,7 +197,7 @@ def quick_sort_logic(arr, sort_order="asc"):
             "comparing": [],
             "swapping": [],
             "pivot": pivot_idx,
-            "sorted": [],
+            "sorted": current_sorted(),
             "waiting": waiting,
             "line": 13,
             "keys": ["i", "j", "l", "r"],
@@ -207,7 +211,10 @@ def quick_sort_logic(arr, sort_order="asc"):
         })
 
         right_waiting_range = (i, r) if i < r else None
-        left_done_range = (l, j) if l <= j else None
+        if l <= j and not l < j:
+            sorted_indices.add(l)
+        if i <= r and not i < r:
+            sorted_indices.add(i)
 
         if l < j:
             left_waiting_ranges = waiting_ranges.copy()
@@ -219,7 +226,7 @@ def quick_sort_logic(arr, sort_order="asc"):
                 "comparing": [],
                 "swapping": [],
                 "pivot": None,
-                "sorted": [],
+                "sorted": current_sorted(),
                 "waiting": flatten_ranges(left_waiting_ranges),
                 "line": 14,
                 "keys": ["l", "j"],
@@ -231,18 +238,17 @@ def quick_sort_logic(arr, sort_order="asc"):
             })
 
             quick_sort(l, j, left_waiting_ranges)
+            sorted_indices.update(range(l, j + 1))
 
         if i < r:
             right_waiting_ranges = waiting_ranges.copy()
-            if left_done_range:
-                right_waiting_ranges.append(left_done_range)
 
             steps_history.append({
                 "array": sorted_arr.copy(),
                 "comparing": [],
                 "swapping": [],
                 "pivot": None,
-                "sorted": [],
+                "sorted": current_sorted(),
                 "waiting": flatten_ranges(right_waiting_ranges),
                 "line": 15,
                 "keys": ["i", "r"],
@@ -254,6 +260,7 @@ def quick_sort_logic(arr, sort_order="asc"):
             })
 
             quick_sort(i, r, right_waiting_ranges)
+            sorted_indices.update(range(i, r + 1))
 
     quick_sort(0, len(sorted_arr) - 1)
 
