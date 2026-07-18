@@ -14,6 +14,7 @@ from app.models.simulation_history import SimulationHistory
 from app.models.user import User
 from app.config.cache import cache
 from werkzeug.middleware.proxy_fix import ProxyFix
+
 app = Flask(__name__)
 app.config.from_object(Config)
 print(app.config["SMTP_USER"])
@@ -33,7 +34,7 @@ app.config['SWAGGER'] = {
             'in': 'header'
         }
     },
-    'security': [{'BearerAuth': []}]         # <-- thêm dòng này
+    'security': [{'BearerAuth': []}]        
 }
 swagger = Swagger(app)
 
@@ -54,4 +55,4 @@ def home():
 
 if __name__ == '__main__':
     print("Swagger: http://127.0.0.1:5000/apidocs/")
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

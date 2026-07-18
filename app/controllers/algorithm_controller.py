@@ -1,3 +1,4 @@
+import os
 from flask import jsonify, Blueprint, request, current_app, g
 from flasgger import swag_from
 import traceback
@@ -52,10 +53,8 @@ def _is_admin_request():
 
 def _get_user_or_guest():
     auth_header = request.headers.get("Authorization")
-
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-
         try:
             payload = jwt.decode(
                 token,
@@ -65,13 +64,9 @@ def _get_user_or_guest():
             return payload, None
         except Exception:
             pass
-
-    # Khách vãng lai: tạo mã định danh từ IP và User-Agent
     user_ip = request.remote_addr or "unknown_ip"
     user_agent = request.headers.get("User-Agent", "unknown_device")
-
     raw_identifier = f"{user_ip}_{user_agent}"
-
     guest_id = hashlib.md5(raw_identifier.encode("utf-8")).hexdigest()
     return None, guest_id
 
@@ -79,25 +74,40 @@ def _get_user_or_guest():
 def _check_free_tier_and_increment(guest_id):
     if not guest_id:
         return True
-
     cache_key = f"free_tier:{guest_id}"
     count = cache.get(cache_key)
-
-    # Lượt sử dụng đầu tiên
     if count is None:
-        cache.set( cache_key, 1,timeout=FREE_TIER_RESET_SECONDS)
+        cache.set(cache_key, 1, timeout=FREE_TIER_RESET_SECONDS)
         return True
-
     try:
         count = int(count)
     except (TypeError, ValueError):
-        cache.set(cache_key,1,timeout=FREE_TIER_RESET_SECONDS)
+        cache.set(cache_key, 1, timeout=FREE_TIER_RESET_SECONDS)
         return True
-    
     if count >= FREE_TIER_LIMIT:
         return False
-    cache.set( cache_key,count + 1,timeout=FREE_TIER_RESET_SECONDS)
+    cache.set(cache_key, count + 1, timeout=FREE_TIER_RESET_SECONDS)
     return True
+
+
+def _is_blank_field(value):
+    if value is None:
+        return True
+    if isinstance(value, list):
+        return len(value) == 0
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return True
+        if stripped.startswith('['):
+            try:
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    return len(parsed) == 0
+            except (ValueError, TypeError):
+                return False
+        return False
+    return False
 
 
 @algorithm_bp.route('', methods=['GET'])
@@ -125,9 +135,12 @@ def get_all_algorithms():
 def create_algorithm():
     try:
         data = request.get_json()
-        required = ['name', 'slug']
-        if not all(k in data for k in required):
-            return jsonify({"error": f"Missing required fields: {required}"}), 400
+        required = ['name', 'slug', 'description', 'steps']
+        missing = [k for k in required if _is_blank_field(data.get(k))]
+        if missing:
+            return jsonify({
+                "error": f"Vui lòng nhập đầy đủ thông tin bắt buộc: {', '.join(missing)}"
+            }), 400
 
         if data.get('is_custom') and data['slug'] in ALGO_FUNC_MAP:
             return jsonify({
@@ -141,10 +154,8 @@ def create_algorithm():
         data.setdefault('category_id', 1)
         data.setdefault('status', 1)
         data.setdefault('code', '')
-        data.setdefault('description', '')
         data.setdefault('time_complexity', '')
         data.setdefault('space_complexity', '')
-        data.setdefault('steps', None)
         data.setdefault('is_custom', False)
         data.setdefault('code_filename', None)
         data.setdefault('features', None)
@@ -427,34 +438,21 @@ def delete_algorithm(algorithm_id):
 @roles_required(1)
 def upload_algorithm_code():
     if 'file' not in request.files:
-        return jsonify({"error": "Không tìm thấy file trong request"}), 400
+        return jsonify({"error": "Không tìm thấy file"}), 400
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"error": "Chưa chọn file"}), 400
-
-    if not file.filename.endswith('.py'):
-        return jsonify({"error": "Chỉ chấp nhận file .py"}), 400
-
-    file.seek(0, 2)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > MAX_UPLOAD_SIZE:
-        return jsonify({"error": f"File vượt quá {MAX_UPLOAD_SIZE // 1024}KB"}), 400
+        return jsonify({"error": "Tên file rỗng"}), 400
 
     try:
-        slug, filepath, display_code, features = validate_and_save_algorithm_file(file, file.filename)
+        slug, filepath, display_code, features, time_comp, space_comp = validate_and_save_algorithm_file(file, file.filename)
         return jsonify({
-            "message": "File hợp lệ và đã lưu thành công",
             "slug": slug,
-            "code_filename": f"{slug}.py",
-            "is_custom": True,
-            "display_code": display_code,
-            "features": features
+            "code_filename": os.path.basename(filepath),
+            "display_code": display_code or "",
+            "features": features,
+            "time_complexity": time_comp or "",
+            "space_complexity": space_comp or ""
         }), 200
     except AlgorithmValidationError as e:
         return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        print("LỖI POST /upload-code:", e)
-        traceback.print_exc()
-        return jsonify({"error": f"Lỗi không xác định: {str(e)}"}), 500
