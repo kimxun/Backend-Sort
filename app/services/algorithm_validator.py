@@ -26,6 +26,20 @@ MAX_FILE_SIZE_BYTES = 200 * 1024
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'algorithms', 'uploaded')
 
+COMPLEXITY_MAP = {
+    'bubble-sort': ('O(n^2)', 'O(1)'),
+    'selection-sort': ('O(n^2)', 'O(1)'),
+    'insertion-sort': ('O(n^2)', 'O(1)'),
+    'merge-sort': ('O(n log n)', 'O(n)'),
+    'quick-sort': ('O(n log n)', 'O(log n)'),
+    'heap-sort': ('O(n log n)', 'O(1)'),
+    'counting-sort': ('O(n + k)', 'O(k)'),
+    'radix-sort': ('O(d*(n+k))', 'O(n+k)'),
+    'linear-search': ('O(n)', 'O(1)'),
+    'binary-search': ('O(log n)', 'O(1)'),
+    'interchange-sort': ('O(n^2)', 'O(1)'),
+}
+
 
 class AlgorithmValidationError(Exception):
     pass
@@ -87,6 +101,34 @@ def extract_features(source_code):
                                 features.append(item.value)
                         return features
     return []
+
+
+def extract_time_complexity(source_code: str):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "TIME_COMPLEXITY":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        return node.value.value
+    return None
+
+
+def extract_space_complexity(source_code: str):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "SPACE_COMPLEXITY":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        return node.value.value
+    return None
 
 
 def validate_source_code(source_code: str):
@@ -177,19 +219,25 @@ def load_and_test_module(filepath: str, slug: str):
         args=(filepath, module_name, test_array, queue)
     )
     process.start()
-    process.join(timeout=MAX_EXECUTION_SECONDS)
 
-    if process.is_alive():
-        process.terminate()
-        process.join()
+    status = None
+    value = None
+    try:
+        status, value = queue.get(timeout=MAX_EXECUTION_SECONDS)
+    except Exception:
+        pass
+    finally:
+        process.join(timeout=2)
+        if process.is_alive():
+            process.terminate()
+            process.join()
+
+    if status is None:
         raise AlgorithmValidationError(
-            f"Thuật toán chạy quá {MAX_EXECUTION_SECONDS} giây — có thể bị lặp vô hạn."
+            f"Thuật toán chạy quá {MAX_EXECUTION_SECONDS} giây hoặc không trả về kết quả "
+            "— có thể bị lặp vô hạn hoặc crash không rõ nguyên nhân."
         )
 
-    if queue.empty():
-        raise AlgorithmValidationError("Tiến trình con không trả về kết quả.")
-
-    status, value = queue.get()
     if status == "error":
         raise AlgorithmValidationError(f"Lỗi khi chạy thử thuật toán: {value}")
 
@@ -245,9 +293,15 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
 
     display_code = extract_display_code(source_code)
     features = extract_features(source_code)
+    time_complexity = extract_time_complexity(source_code)
+    space_complexity = extract_space_complexity(source_code)
+
+    if not time_complexity and slug in COMPLEXITY_MAP:
+        time_complexity, _ = COMPLEXITY_MAP[slug]
+    if not space_complexity and slug in COMPLEXITY_MAP:
+        _, space_complexity = COMPLEXITY_MAP[slug]
 
     source_code = remove_docstring(source_code)
-
     validate_source_code(source_code)
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -259,7 +313,7 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
         load_and_test_module(temp_filepath, slug)
         final_filepath = os.path.join(UPLOAD_DIR, f"{slug}.py")
         os.replace(temp_filepath, final_filepath)
-        return slug, final_filepath, display_code, features
+        return slug, final_filepath, display_code, features, time_complexity, space_complexity
     except AlgorithmValidationError:
         if os.path.exists(temp_filepath):
             os.remove(temp_filepath)

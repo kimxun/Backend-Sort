@@ -84,16 +84,21 @@ class AlgorithmRepository:
             return False
         if permanent:
             SimulationHistory.query.filter_by(algorithm_id=algorithm_id).delete()
+            if algorithm.code_filename:
+                filepath = os.path.join(UPLOAD_DIR, algorithm.code_filename)
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                module_name = algorithm.code_filename.replace('.py', '')
+                pycache_dir = os.path.join(UPLOAD_DIR, '__pycache__')
+                if os.path.isdir(pycache_dir):
+                    for f in os.listdir(pycache_dir):
+                        if f.startswith(module_name) and f.endswith('.pyc'):
+                            pyc_path = os.path.join(pycache_dir, f)
+                            os.remove(pyc_path)
             db.session.delete(algorithm)
         else:
-            algorithm.status = 0
+            algorithm.status = -1
         db.session.commit()
-
-        if algorithm.code_filename:
-            filepath = os.path.join(UPLOAD_DIR, algorithm.code_filename)
-            if os.path.exists(filepath):
-                os.remove(filepath)
-
         cache.delete_memoized(AlgorithmRepository.get_all)
         cache.delete_memoized(AlgorithmRepository.get_by_id, algorithm_id)
         cache.delete_memoized(AlgorithmRepository.get_by_slug, algorithm.slug)
