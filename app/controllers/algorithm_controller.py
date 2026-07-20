@@ -207,11 +207,6 @@ def sort_algorithm():
         return jsonify({"error": "'array' must be a list"}), 400
 
     user, guest_id = _get_user_or_guest()
-    if guest_id and not _check_free_tier_and_increment(guest_id):
-        return jsonify({
-            "error": "Free limit exceeded",
-            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
-        }), 401
 
     algorithm_id = data.get('algorithm_id')
     algorithm_slug = data.get('algorithm')
@@ -279,12 +274,6 @@ def get_algorithm_steps(algorithm_id):
     if not user and not guest_id:
         return jsonify({"error": "Guest ID required"}), 400
 
-    if guest_id and not _check_free_tier_and_increment(guest_id):
-        return jsonify({
-            "error": "Free limit exceeded",
-            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
-        }), 401
-
     sort_order = data.get('sortOrder', 'asc')
 
     algorithm = SortService.get_algorithm_by_id(algorithm_id)
@@ -328,12 +317,6 @@ def search_algorithm_steps(algorithm_id):
     user, guest_id = _get_user_or_guest()
     if not user and not guest_id:
         return jsonify({"error": "Guest ID required"}), 400
-
-    if guest_id and not _check_free_tier_and_increment(guest_id):
-        return jsonify({
-            "error": "Free limit exceeded",
-            "message": "Bạn đã dùng hết 3 lượt mô phỏng miễn phí. Vui lòng đăng nhập!"
-        }), 401
 
     algorithm = SortService.get_algorithm_by_id(algorithm_id)
     if not algorithm:
@@ -382,11 +365,86 @@ def search_algorithm_steps(algorithm_id):
         return jsonify({"error": str(e)}), 500
 
 
+@algorithm_bp.route('/compare', methods=['POST'])
+@jwt_required
+def compare_algorithms():
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    data = request.get_json()
+    if not data or 'array' not in data or 'algorithm_id_1' not in data or 'algorithm_id_2' not in data:
+        return jsonify({"error": "Thiếu trường bắt buộc: array, algorithm_id_1, algorithm_id_2"}), 400
+
+    input_array = data['array']
+    if not isinstance(input_array, list):
+        return jsonify({"error": "'array' must be a list"}), 400
+
+    id1 = data['algorithm_id_1']
+    id2 = data['algorithm_id_2']
+    sort_order = data.get('sortOrder', 'asc')
+
+    algo1 = SortService.get_algorithm_by_id(id1)
+    algo2 = SortService.get_algorithm_by_id(id2)
+    if not algo1 or not algo2:
+        return jsonify({"error": "Không tìm thấy thuật toán"}), 404
+
+    func1 = ALGO_FUNC_MAP.get(algo1.slug)
+    if not func1 and algo1.code_filename:
+        func1 = load_uploaded_algorithm_function(algo1.code_filename.replace('.py', ''))
+    func2 = ALGO_FUNC_MAP.get(algo2.slug)
+    if not func2 and algo2.code_filename:
+        func2 = load_uploaded_algorithm_function(algo2.code_filename.replace('.py', ''))
+
+    if not func1 or not func2:
+        return jsonify({"error": "Một trong hai thuật toán không hỗ trợ chạy từng bước"}), 400
+
+    try:
+        start1 = time.perf_counter()
+        sorted1, steps1, comps1, swaps1, _ = func1(input_array.copy(), sort_order)
+        time1 = int((time.perf_counter() - start1) * 1000)
+
+        start2 = time.perf_counter()
+        sorted2, steps2, comps2, swaps2, _ = func2(input_array.copy(), sort_order)
+        time2 = int((time.perf_counter() - start2) * 1000)
+
+        return jsonify({
+            "algorithm_1": {
+                "id": algo1.id,
+                "name": algo1.name,
+                "slug": algo1.slug,
+                "steps": steps1,
+                "comparisons": comps1,
+                "swaps": swaps1,
+                "time_ms": time1,
+                "sorted": sorted1
+            },
+            "algorithm_2": {
+                "id": algo2.id,
+                "name": algo2.name,
+                "slug": algo2.slug,
+                "steps": steps2,
+                "comparisons": comps2,
+                "swaps": swaps2,
+                "time_ms": time2,
+                "sorted": sorted2
+            },
+            "input_array": input_array,
+            "sort_order": sort_order
+        }), 200
+    except Exception as e:
+        print("LỖI POST /compare:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
 @algorithm_bp.route('/<int:algorithm_id>', methods=['PUT'])
 @jwt_required
 @roles_required(1)
 def update_algorithm(algorithm_id):
     try:
+        if request.method == 'OPTIONS':
+            return '', 200
+
         data = request.get_json()
 
         if data.get('is_custom') and data.get('slug') in ALGO_FUNC_MAP:
@@ -437,6 +495,9 @@ def delete_algorithm(algorithm_id):
 @jwt_required
 @roles_required(1)
 def upload_algorithm_code():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     if 'file' not in request.files:
         return jsonify({"error": "Không tìm thấy file"}), 400
 
