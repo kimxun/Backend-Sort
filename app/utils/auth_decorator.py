@@ -5,6 +5,8 @@ from flask import request, jsonify, current_app, g
 def jwt_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return f(*args, **kwargs)
 
         auth_header = request.headers.get("Authorization")
 
@@ -30,7 +32,7 @@ def jwt_required(f):
             )
 
             g.current_user = payload
-            # kiểm tra token còn hạn không
+
         except jwt.ExpiredSignatureError:
             return jsonify({
                 "message": "Token đã hết hạn"
@@ -51,6 +53,8 @@ def roles_required(*roles):
 
         @wraps(f)
         def decorated(*args, **kwargs):
+            if request.method == 'OPTIONS':
+                return f(*args, **kwargs)
 
             current_user = getattr(g, "current_user", None)
             print("Current User in roles_required:", current_user)
@@ -67,20 +71,16 @@ def roles_required(*roles):
                 }), 403
 
             return f(*args, **kwargs)
-        
 
         return decorated
-    
 
     return decorator
+
 
 def optional_jwt_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-
         auth_header = request.headers.get("Authorization")
-
-        # Mặc định chưa đăng nhập
         g.current_user = None
 
         if auth_header:
