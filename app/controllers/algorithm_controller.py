@@ -371,34 +371,40 @@ def compare_algorithms():
     if request.method == 'OPTIONS':
         return '', 200
 
-    data = request.get_json()
-    if not data or 'array' not in data or 'algorithm_id_1' not in data or 'algorithm_id_2' not in data:
-        return jsonify({"error": "Thiếu trường bắt buộc: array, algorithm_id_1, algorithm_id_2"}), 400
-
-    input_array = data['array']
-    if not isinstance(input_array, list):
-        return jsonify({"error": "'array' must be a list"}), 400
-
-    id1 = data['algorithm_id_1']
-    id2 = data['algorithm_id_2']
-    sort_order = data.get('sortOrder', 'asc')
-
-    algo1 = SortService.get_algorithm_by_id(id1)
-    algo2 = SortService.get_algorithm_by_id(id2)
-    if not algo1 or not algo2:
-        return jsonify({"error": "Không tìm thấy thuật toán"}), 404
-
-    func1 = ALGO_FUNC_MAP.get(algo1.slug)
-    if not func1 and algo1.code_filename:
-        func1 = load_uploaded_algorithm_function(algo1.code_filename.replace('.py', ''))
-    func2 = ALGO_FUNC_MAP.get(algo2.slug)
-    if not func2 and algo2.code_filename:
-        func2 = load_uploaded_algorithm_function(algo2.code_filename.replace('.py', ''))
-
-    if not func1 or not func2:
-        return jsonify({"error": "Một trong hai thuật toán không hỗ trợ chạy từng bước"}), 400
-
     try:
+        data = request.get_json()
+        if not data or 'array' not in data or 'algorithm_id_1' not in data or 'algorithm_id_2' not in data:
+            return jsonify({"error": "Thiếu trường bắt buộc: array, algorithm_id_1, algorithm_id_2"}), 400
+
+        input_array = data['array']
+        if not isinstance(input_array, list):
+            return jsonify({"error": "'array' must be a list"}), 400
+
+        id1 = data['algorithm_id_1']
+        id2 = data['algorithm_id_2']
+        sort_order = data.get('sortOrder', 'asc')
+
+        algo1 = SortService.get_algorithm_by_id(id1)
+        algo2 = SortService.get_algorithm_by_id(id2)
+        if not algo1 or not algo2:
+            return jsonify({"error": "Không tìm thấy thuật toán"}), 404
+
+        # Kiểm tra cùng loại
+        if algo1.category_id != algo2.category_id:
+            return jsonify({
+                "error": "Không thể so sánh hai thuật toán khác loại (sắp xếp và tìm kiếm). Vui lòng chọn hai thuật toán cùng loại."
+            }), 400
+
+        func1 = ALGO_FUNC_MAP.get(algo1.slug)
+        if not func1 and algo1.code_filename:
+            func1 = load_uploaded_algorithm_function(algo1.code_filename.replace('.py', ''))
+        func2 = ALGO_FUNC_MAP.get(algo2.slug)
+        if not func2 and algo2.code_filename:
+            func2 = load_uploaded_algorithm_function(algo2.code_filename.replace('.py', ''))
+
+        if not func1 or not func2:
+            return jsonify({"error": "Một trong hai thuật toán không hỗ trợ chạy từng bước"}), 400
+
         start1 = time.perf_counter()
         sorted1, steps1, comps1, swaps1, _ = func1(input_array.copy(), sort_order)
         time1 = int((time.perf_counter() - start1) * 1000)
@@ -431,6 +437,7 @@ def compare_algorithms():
             "input_array": input_array,
             "sort_order": sort_order
         }), 200
+
     except Exception as e:
         print("LỖI POST /compare:", e)
         traceback.print_exc()
