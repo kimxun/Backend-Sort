@@ -131,6 +131,38 @@ def extract_space_complexity(source_code: str):
     return None
 
 
+def extract_description(source_code: str):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "DESCRIPTION":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        return node.value.value
+    return None
+
+
+def extract_steps(source_code: str):
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "STEPS":
+                    if isinstance(node.value, ast.List):
+                        steps = []
+                        for item in node.value.elts:
+                            if isinstance(item, ast.Constant) and isinstance(item.value, str):
+                                steps.append(item.value)
+                        return steps
+    return None
+
+
 def validate_source_code(source_code: str):
     if len(source_code.encode("utf-8")) > MAX_FILE_SIZE_BYTES:
         raise AlgorithmValidationError(
@@ -280,13 +312,17 @@ def load_and_test_module(filepath: str, slug: str):
     return True
 
 
-def validate_and_save_algorithm_file(file_storage, original_filename: str):
+def validate_and_save_algorithm_file(file_storage, original_filename: str, form_slug: str = None):
     if not original_filename.endswith(".py"):
         raise AlgorithmValidationError("Chỉ chấp nhận file .py")
 
-    slug = generate_slug_from_filename(original_filename)
+    if form_slug and form_slug.strip():
+        slug = generate_slug_from_filename(form_slug.strip())
+    else:
+        slug = generate_slug_from_filename(original_filename)
+
     if not slug:
-        raise AlgorithmValidationError("Không thể tạo slug hợp lệ từ tên file.")
+        raise AlgorithmValidationError("Không thể tạo slug hợp lệ.")
 
     source_code = file_storage.read().decode("utf-8")
     file_storage.seek(0)
@@ -295,6 +331,8 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
     features = extract_features(source_code)
     time_complexity = extract_time_complexity(source_code)
     space_complexity = extract_space_complexity(source_code)
+    description = extract_description(source_code)
+    steps = extract_steps(source_code)
 
     if not time_complexity and slug in COMPLEXITY_MAP:
         time_complexity, _ = COMPLEXITY_MAP[slug]
@@ -313,7 +351,7 @@ def validate_and_save_algorithm_file(file_storage, original_filename: str):
         load_and_test_module(temp_filepath, slug)
         final_filepath = os.path.join(UPLOAD_DIR, f"{slug}.py")
         os.replace(temp_filepath, final_filepath)
-        return slug, final_filepath, display_code, features, time_complexity, space_complexity
+        return slug, final_filepath, display_code, features, time_complexity, space_complexity, description, steps
     except AlgorithmValidationError:
         if os.path.exists(temp_filepath):
             os.remove(temp_filepath)
