@@ -1,6 +1,7 @@
 def linear_search_logic(arr, target):
     steps = []
     comparisons = 0
+    n = len(arr)
 
     steps.append({
         "array": arr.copy(),
@@ -8,6 +9,8 @@ def linear_search_logic(arr, target):
         "comparing": [],
         "found": False,
         "line": 2,
+        "keys": ["i", "target"],
+        "vals": [0 if n > 0 else "-", target],
         "action": (
             f"Bắt đầu tìm {target}. Kiểm tra lần lượt từng phần tử "
             f"từ đầu đến cuối mảng"
@@ -25,6 +28,8 @@ def linear_search_logic(arr, target):
             "comparing": [i],
             "found": False,
             "line": 3,
+            "keys": ["i", "a[i]", "target"],
+            "vals": [i, arr[i], target],
             "action": (
                 f"Kiểm tra vị trí {i}: giá trị {arr[i]} không bằng {target}, "
                 f"tiếp tục sang vị trí {i + 1}"
@@ -42,6 +47,8 @@ def linear_search_logic(arr, target):
             "comparing": [i],
             "found": True,
             "line": 7,
+            "keys": ["i", "a[i]", "target", "found_index"],
+            "vals": [i, arr[i], target, i],
             "action": (
                 f"Kiểm tra vị trí {i}: giá trị {arr[i]} bằng {target}. "
                 f"Đã tìm thấy tại vị trí {i}"
@@ -56,6 +63,8 @@ def linear_search_logic(arr, target):
         "comparing": [],
         "found": False,
         "line": 6,
+        "keys": ["i", "target", "found_index"],
+        "vals": [i, target, -1],
         "action": (
             f"Không có phần tử nào trong mảng bằng {target}. "
          
