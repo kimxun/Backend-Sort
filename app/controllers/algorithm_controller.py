@@ -389,7 +389,6 @@ def compare_algorithms():
         if not algo1 or not algo2:
             return jsonify({"error": "Không tìm thấy thuật toán"}), 404
 
-        # Kiểm tra cùng loại
         if algo1.category_id != algo2.category_id:
             return jsonify({
                 "error": "Không thể so sánh hai thuật toán khác loại (sắp xếp và tìm kiếm). Vui lòng chọn hai thuật toán cùng loại."
@@ -512,15 +511,23 @@ def upload_algorithm_code():
     if file.filename == '':
         return jsonify({"error": "Tên file rỗng"}), 400
 
+    form_slug = request.form.get('slug')
+
     try:
-        slug, filepath, display_code, features, time_comp, space_comp = validate_and_save_algorithm_file(file, file.filename)
+        slug, filepath, display_code, features, time_comp, space_comp, description, steps = \
+            validate_and_save_algorithm_file(file, file.filename, form_slug=form_slug)
         return jsonify({
             "slug": slug,
             "code_filename": os.path.basename(filepath),
             "display_code": display_code or "",
             "features": features,
             "time_complexity": time_comp or "",
-            "space_complexity": space_comp or ""
+            "space_complexity": space_comp or "",
+            "description": description or "",
+            "steps": steps or []
         }), 200
     except AlgorithmValidationError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": f"Lỗi server: {str(e)}"}), 500
